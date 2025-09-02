@@ -1,0 +1,65 @@
+{% load static %}
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+{% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+    </div>
+{% endif %}
+
+<!-- start breadcrumbs -->
+<section class="breadcrumbs">
+    <div class="container d-flex align-items-center justify-content-between">
+        <ul>
+            <li><a  href="{% url 'music_app_home' %}">Home</a></li>
+            <li><a  href="{% url 'user_login' %}">Login</a></li>
+            <li><a  href="{% url 'user_registration' %}">Sign Up</a></li>
+        </ul>
+    </div>
+</section>
+<!-- end breadcrumbs -->
+
+<!-- Start Registration Form-->
+<section class="page-details">
+    <div class="container align-items-center justify-content-between page-info bg-white">
+        <form id="form" class="form-group" method="POST" action="{{ form_action_url }}" enctype="multipart/form-data"
+            <title> Sign up to Music App</title>
+            {% csrf_token %}
+                <fieldset class="form-group my-4">
+                    <div class="form-group form-row">
+                        <div class="form-group row align-items-base">
+                            <div class="col-lg-5">
+                                {{ form.email|as_crispy_field }}
+                                <!--Include a validator for an email that already exists-->
+                            </div>
+                            <div class="col-lg-5">
+                                {{ form.username|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-row my-3">
+                        <div class="form-group row align-items-base">
+                            <div class="col-lg-5">
+                                {{ form.password1|as_crispy_field }}
+                                {{ form.password2|as_crispy_field }}  
+                                <input type="checkbox" class="show-password-toggle" id="show_password_checkbox">
+                                <label for="show_password_checkbox">Show Password</label>                         
+                            <div class="col-lg-5">
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="d-flex align-items-center justify-content-between">
+                    <input type="submit" id="submit-button" class="btn button-style" value="Submit">
+                </div>
+            </div>       
+        </form>
+
+</section>
+<!-- end Registration Form -->
+
+<script src=" {% static 'music_app/js/show_password.js' %} "> </script>
+
+{% endblock content %}
