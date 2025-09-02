@@ -28,48 +28,43 @@ I'm building the back-end first, once the features work as expected I'll begin w
   - Reusable error-handling utilities (`src/django_error_utils.py`)
 
 ## Project Structure
+```
 project_folder/
-│
-├── music_app/                  # Main Django app
-│   ├── common/                 # Shared logic and utilities
-│   │   ├── backends.py
-│   │   ├── send_email.py
-│   │   ├── utils.py
-│   │   ├── validators.py
-│   │   └── README.md
-│   │
-│   ├── migrations/
-│   ├── src/                    # Cross-cutting project-wide modules
-│   │   ├── custom_exceptions.py
-│   │   ├── django_error_utils.py
-│   │   └── README.md
-│   │
-│   ├── tests/
-│       ├── test_email_backend.py/
-│       ├── test_models.py/
-│       ├── test_views.py/
-│   ├── templates/
-│   │
-│   ├── apps.py
+├── manage.py
+├── environment.yml
+├── README.md                 # Main project README
+├── music_app/                # Main Django app
 │   ├── admin.py
+│   ├── apps.py
 │   ├── asgi.py
 │   ├── changelog.md
-│   ├── models.py
-│   ├── managers.py
-│   ├── views.py
-│   ├── settings.py
 │   ├── forms.py
+│   ├── managers.py
+│   ├── models.py
+│   ├── settings.py
 │   ├── urls.py
+│   ├── views.py
 │   ├── wsgi.py
 │   ├── templates/
 │   ├── static/
+│   └── tests/
+│       ├── test_email_backend.py
+│       ├── test_models.py
+│       └── test_views.py
+├── common/                   # Shared logic and utilities
+│   ├── backends.py
+│   ├── send_email.py
+│   ├── utils.py
+│   ├── validators.py
 │   └── README.md
-│   ├── static/
-│   │   ├── music_app
-│   │       ├── show_password.js
-├── manage.py
-├── environment.yml
-├── README.md #this file
+├── src/                      # Cross-cutting project-wide modules
+│   ├── custom_exceptions.py
+│   ├── django_error_utils.py
+│   └── README.md
+└── static/
+    └── music_app/
+        └── show_password.js
+```
 
 
 ## Tech Stack
@@ -88,22 +83,22 @@ project_folder/
     ```
 
 2. **Mac - Create and activate a virtual environment:**
-**Install Homebrew** (if not already installed):
+- **Install Homebrew** (if not already installed):
     ```bash
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     ```
 
-**Install Miniconda**:
+- **Install Miniconda**:
     ```bash
     brew install --cask miniconda
     ```
 
 3. **Software dependencies:**
-**Create Conda Environment**:
+- **Create Conda Environment**:
     ```bash
     conda env create -f ./environment.yml -n music_app
     ```
-**Update Conda Environment**:
+- **Update Conda Environment**:
     ```bash
     conda env update --name music_app --file ./environment.yml --prune
     ```
