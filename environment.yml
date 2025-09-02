@@ -100,4 +100,4 @@ dependencies:
     - pytest-cov==6.1.1
     - pytest-django==4.11.1
     #uncomment when creating the environment the first time locally
-    # - psycopg2==2.9.10
+    - psycopg2==2.9.10
