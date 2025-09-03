@@ -37,9 +37,9 @@ class UserRegistrationTests(TestCase):
         })
 
         #Check the correct redirect
-        self.assertRedirects(response, reverse("user_authentication"))
+        self.assertRedirects(response, reverse("user_authentication", args=[1]))
 
-        #Check that authenticatoin email has been sent
+       #Check that authenticatoin email has been sent
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(self.valid_email, mail.outbox[0].to)
         self.assertIn("Authentication Email", mail.outbox[0].subject)
@@ -63,6 +63,48 @@ class UserRegistrationTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
 
+class UserAuthenticationTests(TestCase):
+    '''
+    The following test case, tests the 'user authentication' feature.
+
+    Positive test cases:
+        - The user is redirected to the correct view.
+        - The user is authenticated, that is, the field, is_active = True
+        - The user can log in successfully once verified.
+    '''
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            email="test@user.com",
+            password="OldPass!234",
+            username="simple_john"
+        )
+
+        self.token = generate_one_time_token(self.user.id, OneTimeToken.Purpose.AUTH)
+
+        self.positive_password = 'OldPass!234'
+
+    def test_user_authentication_positive(self):
+        #Check is user is successfully authenticated after clicking on link in email
+        url = reverse("user_authentication_success", args=[self.user.id, self.token.token])
+
+        response = self.client.get(url)
+        
+        self.user.refresh_from_db()
+        #Check email is verified after visiting the page with the correct token + id
+        self.assertTrue(self.user.email_verified)
+        #Check the correct redirect
+        self.assertEqual(response.status_code, 200)
+
+    def test_verified_user_login_positive(self):
+        self.user.email_verified = True
+        self.user.is_active = True
+        self.user.save()
+
+        login = self.client.login(email=self.user.email, password=self.positive_password)
+        self.assertTrue(login)
+
+        
+
 class UserResetPasswordTests(TestCase):
     '''
     The following test case, tests the 'reset password' feature.
@@ -71,6 +113,8 @@ class UserResetPasswordTests(TestCase):
         - Positive results, that is, the password is updated and teh user can loging
         - Negative test case:
             - Incorrect email address
+
+    #TODO add negative test cases.
     '''
     def setUp(self):
         self.user = CustomUser.objects.create_user(
@@ -88,8 +132,8 @@ class UserResetPasswordTests(TestCase):
             url = reverse("user_reset_password", args=[self.user.id, self.token.token])
 
             response = self.client.post(url, {
-                "new_password1": self.new_password,
-                "new_password2": self.new_password,
+                "new_password1": self.new_password
+                , "new_password2": self.new_password
             })
             #Check the correct redirect
             self.assertRedirects(response, reverse("user_success_reset_password"))
@@ -129,6 +173,8 @@ class UserResendPasswordEmail(TestCase):
             - A new token is generated.
             - The original token is_active = False
             - The reset password email is sent again with subject 'Rest Password'
+
+    #TODO add negative test cases.
     '''
     def setUp(self):
         self.user = CustomUser.objects.create_user(
@@ -153,7 +199,7 @@ class UserResendPasswordEmail(TestCase):
                         user_id=self.user.id,
                         is_used=False,
                         is_active=True,
-                        purpose=OneTimeToken.Purpose.RESET_PASSWORD
+                        purpose=OneTimeToken.Purpose.RESET_PASSWORD 
                         ).exclude(token=self.token.token).first()
         
         self.assertNotEqual(new_token.token, self.token)
@@ -162,3 +208,4 @@ class UserResendPasswordEmail(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(self.user.email, mail.outbox[0].to)
         self.assertIn("Reset Password", mail.outbox[0].subject)
+

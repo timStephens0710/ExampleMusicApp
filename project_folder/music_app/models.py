@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 import uuid
 
-from .managers import CustomUserManager
+from .managers import CustomUserManager, CustomOneTimeTokenManager
 
 
 class CustomUser(AbstractUser):
@@ -74,3 +74,6 @@ class OneTimeToken(models.Model):
     expires_at = models.DateTimeField(blank=False, null=False)
     is_used = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+
+    #Pull through the manager
+    objects = CustomOneTimeTokenManager()

@@ -10,3 +10,10 @@ All notable changes to this project will be documented in this file.
     * The user can login.
     * The user can logout.
     * The user can reset their password if they've forgotten it.
+
+# 2025-09-03
+### Added    
+* The following functionalities have been built:
+    * The user can request the authentication email to sent.
+
+* Additional tests added test_views.py
