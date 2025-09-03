@@ -4,12 +4,14 @@
 
 **music_app** is a Django-based web application for a music platform. This is code I have taken from my private repo. I will build this in stages.
 
-I'm building the back-end first, once the features work as expected I'll begin with the front-end
+I'm building the back-end first, once the features work as expected I'll begin with improving the front-end.
 
 ## Developer notes:
-- More unit tests to be written.
-- Feature: user can request authentication email to be.
-- Front-end improvements to make it more appealing.
+Coming soon:
+  - More unit tests to be written
+  - Feature: user can request authentication email to be re-sent
+  - Implement front-end to improve the look at feel
+  - Containerise the app in Docker
 
 ## Features
 
@@ -21,6 +23,7 @@ I'm building the back-end first, once the features work as expected I'll begin w
 
 - **Forms & Validation**
   - Custom form validation for better UX
+  - Custom password validators
   - JS-powered “show password” toggle
 
 - **Error Handling**
