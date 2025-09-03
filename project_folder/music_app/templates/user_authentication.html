@@ -18,6 +18,12 @@
 <body>
     <h1>  Epic thanks for signing up :)</h1>
 
-    <p>Please check your email to authenticate your profile. </p>
+    <p>Please check your email to authenticate your profile. Be sure to also check yout Junk or Spam folders. </p>
 </body>
+<form action="{% url 'user_authentication' user_id=user_id %}" method="post" >
+    {% csrf_token %}
+    <div class="d-flex align-items-center justify-content-between">
+        <input type="submit" id="submit-button" class="btn button-style" value="Re-send authentication email">
+    </div>
+</form>
 {% endblock content %}

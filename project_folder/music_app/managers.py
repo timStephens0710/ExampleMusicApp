@@ -57,3 +57,61 @@ class CustomUserManager(BaseUserManager):
         except ObjectDoesNotExist:
             raise EmailNotFound(user=None)
 
+
+class CustomOneTimeTokenManager(BaseUserManager):
+    '''
+    Manager for the OneTimeToken model.
+    Provides convenience methods for retrieving tokens safely.    '''
+    def get_token_instance_wout_token(self, user_id, purpose):
+        '''
+        Retrieves an instance from the OneTimeToken model without using the token,  for the purpose of updating the specific token after one of
+        the following actions:
+            - User authentication
+            - Resetting password
+        '''
+        try:
+            return self.get(
+                user_id = user_id
+                , is_used = False
+                , is_active = True
+                , purpose = purpose
+                )
+        except self.model.DoesNotExist:
+            return None
+        except self.model.MultipleObjectsReturned:
+            return (
+                self.filter(
+                    user_id=user_id
+                    , is_used=False
+                    , is_active=True
+                    , purpose=purpose
+                ).first()
+            )
+        
+    def get_token_instance_with_token(self, token, user_id, purpose):
+        '''
+        Retrieves an instance from the OneTimeToken model using the token, for the purpose of updating the specific token after one of
+        the following actions:
+            - User authentication
+            - Resetting password
+        '''
+        try:
+            return self.get(
+                token = token
+                , user_id = user_id
+                , is_used = False
+                , is_active = True
+                , purpose = purpose
+                )
+        except self.model.DoesNotExist:
+            return None
+        except self.model.MultipleObjectsReturned:
+            return (
+                self.filter(
+                    token = token
+                    , user_id=user_id
+                    , is_used=False
+                    , is_active=True
+                    , purpose=purpose
+                ).first()
+            )
