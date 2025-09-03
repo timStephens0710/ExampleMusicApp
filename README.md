@@ -9,7 +9,7 @@ I'm building the back-end first, once the features work as expected I'll begin w
 ## Developer notes:
 Coming soon:
   - More unit tests to be written
-  - Implement front-end to improve the look at feel
+  - Implement front-end to improve the look & feel
   - Containerise the app in Docker
 
 ## Features
