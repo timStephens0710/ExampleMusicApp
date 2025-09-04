@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 
-from.forms import RegistrationForm, CustomUserCreationForm, CustomUserChangeForm
-from .models import CustomUser
+from.forms import CustomUserCreationForm, CustomUserChangeForm
+from .models import CustomUser, AppLogging, OneTimeToken
 
 class CustomUserAdmin(DefaultUserAdmin):
     '''
@@ -43,6 +43,32 @@ class CustomUserAdmin(DefaultUserAdmin):
     search_fields = ('email', 'username')
     ordering = ('email',)
 
+
+class AppLoggingAdmin(admin.ModelAdmin):
+    '''
+    Custom admin configuration for the AppLogging model.
+    This class controls how the logging entries are displayed and edited in the Django admin.
+    '''
+    list_display = ('user', 'timestamp', 'log_text')
+    list_filter = ('user', 'timestamp')
+    search_fields = ('user__email', 'log_text')
+    ordering = ('-timestamp',)
+    
+
+class OneTimeTokenAdmin(admin.ModelAdmin):
+    '''
+    Custom admin configuration for the OneTimeToken model.
+    This class controls how the one time tokens are displayed and edited in the Django admin.
+    '''
+    list_display = ('user', 'token', 'created_at', 'expires_at', 'is_used')
+    list_filter = ('user', 'created_at', 'expires_at', 'is_used')
+    search_fields = ('user__email', 'token')
+    ordering = ('-created_at',)
+
+
+#Register admin models
 admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(AppLogging, AppLoggingAdmin)
+admin.site.register(OneTimeToken, OneTimeTokenAdmin)
 
 
