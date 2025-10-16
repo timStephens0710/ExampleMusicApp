@@ -1,0 +1,123 @@
+/* main.css */
+/* Styles that used universially for the music_app */
+
+/* Navbar styles /
+/* Navbar container*/
+.navbar {
+  background-color: #F0FFFF;   /* Azure */
+  color: #000;
+  padding: 1rem;
+  position: fixed;             /* stick to top */
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+/* List of links Authentication processes */
+.navbar-container {
+  display: flex;               /* horizontal layout */
+  justify-content: flex-start;   /* align to left */
+  align-items: center;
+  list-style-type: none; /* remove bullet points */
+  list-style: none;
+  gap: 1.5rem;                 /* space between links */
+  margin: 0;
+  padding: 0;
+}
+
+/* List of links - Profile, the feed + users */
+/* For authentication pages (login, register, etc.) */
+/* For in-app pages (feed, profile, etc.) */
+.music-navbar-container-app {
+  display: flex; 
+  justify-content: flex-end; /* right align */
+  align-items: center;
+  list-style-type: none; /* remove bullet points */
+  list-style: none;
+  gap: 1.5rem;                 /* space between links */
+  margin: 0;
+  padding: 0;
+  width: 100%; /* Always include this parameter when dealing with flex-end
+}
+
+
+ul.no-bullets {
+  list-style-type: none; /* Remove bullets */
+  padding: 0; /* Remove padding */
+  margin: 0; /* Remove margins */
+}
+/* Individual links */
+.nav-link {
+  color: #ccc;                 /* black text */
+  text-decoration: none;       /* remove underline */
+  font-size: 1rem;
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #66F523;               /* green hover color */
+}
+
+
+
+/* Make space for the fixed navbar */
+main {
+  margin-top: 70px;  /* pushes content down so navbar doesn’t cover it */
+}
+
+body {
+    background-color: #F0FFFF;
+    font-family: Arial, sans-serif;
+    padding-top: 80px;
+    justify-content: center;
+    text-align: center ;
+    align-items: center;
+}
+
+h1 {
+    color: #6366F1 /* Tailwind Violet 500 */
+}
+
+h2 {
+     color: #2563eb; /*Tailwind blue */
+}
+
+p {
+    font-size: 18px;
+    color: #374151;
+}
+
+/* Login form field styles */
+#auth-form {
+  display: flex;
+  flex-direction: column; /* stack the input fields vertically */
+  align-items: center; /* align the input fields to the centre*/
+  justify-content: center;
+  margin-top: 100px;
+  background-color: #F0FFFF;
+}
+
+/* Auth input field styling */
+/* The following styling will be applied to all of the input fields used during the 
+authentication process.*/
+.auth-form-input {
+  width: 225px;         
+  padding: 12px;
+  color: #6366F1; /* Or maybe do neon green just not as bright as the hover color #66F523 */
+}
+
+/* Submit button styling */
+/* The following styling will be applied to all of the buttons used during the auth process.*/
+/* #TODO: unsure if I'll add any styling for the submit-buttons tbc */
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.button-style:hover {
+  color: #66F523;               /* green hover color */
+}

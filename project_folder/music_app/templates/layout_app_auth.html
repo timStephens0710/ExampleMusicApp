@@ -1,0 +1,58 @@
+{% load static %}
+
+<html lang="en" >
+
+<!-- The following layout is used for the authentication & reset password processes -->
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+     <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'general/vendors/select2/select2.min.css' %}" , type="text/css">
+    <link rel="stylesheet" href="{% static 'general/css/bootstrap.min.css' %}" , type="text/css">
+    <link rel="stylesheet" href="{% static 'general/css/bootstrap-icons/bootstrap-icons.css' %}" , type="text/css">
+    <link rel="stylesheet" href="{% static 'music_app/css/main.css' %}">
+    <!-- Think about adding in other style sheets-->
+
+     <!-- Bootstrap CSS maybe-->
+
+    <!-- JavaScript Generic -->
+    <script src="{% static 'general/js/jquery-3.5.1.min.js' %}"></script>
+    <script src="{% static 'general/vendors/select2/select2.min.js' %}"></script>
+    <script src="{% static 'general/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Cookies -->
+    <!-- Add cookies in at a later date -->
+    
+</head>
+
+
+<body class="Site">
+
+    <!-- Site Header -->
+    <header-component
+        home-url = "{% url 'music_app_home' %}"
+        user-login = "{% url 'user_login' %}"
+        user-registration = "{% url 'user_registration' %}">
+    </header-component>
+
+    <!-- Site Content -->
+
+    <main role="main">
+        <!-- Alert messages -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Content gets inserted here -->
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
+
