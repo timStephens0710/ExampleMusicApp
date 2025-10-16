@@ -9,7 +9,7 @@ I'm building the back-end first, once the features work as expected I'll begin w
 ## Developer notes:
 Coming soon:
   - More unit tests to be written
-  - Implement front-end to improve the look & feel
+  - Create user profile. As well as 'The archive',for creating playlists.
   - Containerise the app in Docker
 
 ## Features
