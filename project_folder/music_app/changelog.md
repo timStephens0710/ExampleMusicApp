@@ -2,9 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+# 2025-10-16
+### Added
+* Create layout.HTML and main.css for initial front-end design.
+
 # 2025-09-04
 ### Fixed    
-* Get teh admin page up and running.
+* The admin page is up and running.
 
 
 # 2025-09-03

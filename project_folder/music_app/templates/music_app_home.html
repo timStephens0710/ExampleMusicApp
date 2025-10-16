@@ -1,17 +1,20 @@
+{% extends "layout_app_auth.html" %}
 {% load static %}
-{% block content%}
+{% load crispy_forms_tags %}
 
-<!-- start breadcrumbs -->
-<section class="breadcrumbs">
-    <div class="container d-flex align-items-center justify-content-between">
-        <ul>
-            <li><a  href="{% url 'music_app_home' %}">Home</a></li>
-            <li><a  href="{% url 'user_login' %}">Login</a></li>
-            <li><a  href="{% url 'user_registration' %}">Sign Up</a></li>
-        </ul>
-    </div>
-</section>
-<!-- end breadcrumbs -->
+
+{% block content %}
+<!-- start nav-bar -->
+<header class="header">
+  <nav class="navbar">
+    <ul class="navbar-container" >
+      <li><a href="{% url 'music_app_home' %}" class="nav-link">Home</a></li>
+      <li><a href="{% url 'user_login' %}" class="nav-link">Login</a></li>
+      <li><a href="{% url 'user_registration' %}" class="nav-link">Sign Up</a></li>
+    </ul>
+  </nav>
+</header>
+<!-- end nav-bar -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -20,8 +23,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Music App</title>
 </head>
-<body>
-    <h1> Welcome to the music_App homepage </h1>
+<body class="body">
+        <h1> A Micheal Selfish Production brings.... </h1>
+        <p>One part music archiving tool, one part Tumblr, but for all things music. </p>
+
+        <p> d-.-b this one is for heads d-.-b</p>
 </body>
 </html>
 

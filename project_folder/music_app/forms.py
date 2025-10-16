@@ -75,9 +75,12 @@ class LoginForm(forms.Form):
         - We do not need to reference the CustomUser model as we're not creating a user,
         we're simply just capturing the login details.
     '''
-    email = forms.CharField(max_length=100)
+    email = forms.CharField(max_length=100, widget=forms.EmailInput(attrs={
+        'class': 'auth-form-input'
+    })
+    )
     password = forms.CharField(max_length=50, widget=forms.PasswordInput(attrs={
-        'class': 'form-control'
+        'class': 'auth-form-input'
         ,'data-password': 'true'
     })
     )

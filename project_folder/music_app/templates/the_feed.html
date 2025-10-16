@@ -1,26 +1,24 @@
+{% extends "layout_app_auth.html" %}
 {% load static %}
-{% block content %}
-
 {% load crispy_forms_tags %}
 
-<!-- start breadcrumbs -->
-<section class="breadcrumbs">
-    <div class="container d-flex align-items-center justify-content-between">
-        <ul>
-            <li><a  href="{% url 'music_app_home' %}">Home</a></li>
+
+{% block content %}
+<!-- start nav-bar -->
+<header class="header">
+  <nav class="navbar">
+        <ul class="music-navbar-container-app">
+            <li><a  href="{% url 'the_feed' %}" class="nav-link">The Feed</a></li>
+            <li><a  href="{% url 'user_logout' %}" class="nav-link">Logout</a></li>
         </ul>
-    </div>
-</section>
-<!-- end breadcrumbs -->
+  </nav>
+</header>
+<!-- end nav-bar -->
 
 <body>
     <h1> Welcome to the music_app feed</h1>
      <p>{{ message }}</p>
 </body>
-<form action="{% url 'user_logout' %}" method="post">
-  {% csrf_token %}
-  <button type="submit">Log Out</button>
-</form>
 
 
 {% endblock content %}
