@@ -1,133 +1,101 @@
-# music_app
+# Installation guide
+#### Mac
 
-## Overview
-
-**music_app** is a Django-based web application for a music platform. This is code I have taken from my private repo. I will build this in stages.
-
-I'm building the back-end first, once the features work as expected I'll begin with improving the front-end.
-
-## Developer notes:
-Coming soon:
-  - More unit tests to be written
-  - Create user profile. As well as 'The archive',for creating playlists.
-  - Containerise the app in Docker
-
-## Features
-
-- **User Authentication**
-  - Custom user model (email as primary identifier)
-  - Registration with email verification
-  - Secure login/logout
-  - Password reset via email
-
-- **Forms & Validation**
-  - Custom form validation for better UX
-  - Custom password validators
-  - JS-powered “show password” toggle
-
-- **Error Handling**
-  - Centralized custom exception classes (`src/custom_exceptions.py`)
-  - Reusable error-handling utilities (`src/django_error_utils.py`)
-
-## Project Structure
-```
-project_folder/
-├── manage.py
-├── environment.yml
-├── README.md                 # Main project README
-├── music_app/                # Main Django app
-│   ├── admin.py
-│   ├── apps.py
-│   ├── asgi.py
-│   ├── changelog.md
-│   ├── forms.py
-│   ├── managers.py
-│   ├── models.py
-│   ├── settings.py
-│   ├── urls.py
-│   ├── views.py
-│   ├── wsgi.py
-│   ├── templates/
-│   ├── static/
-│   └── tests/
-│       ├── test_email_backend.py
-│       ├── test_models.py
-│       └── test_views.py
-├── common/                   # Shared logic and utilities
-│   ├── backends.py
-│   ├── send_email.py
-│   ├── utils.py
-│   ├── validators.py
-│   └── README.md
-├── src/                      # Cross-cutting project-wide modules
-│   ├── custom_exceptions.py
-│   ├── django_error_utils.py
-│   └── README.md
-└── static/
-    └── music_app/
-        └── show_password.js
-```
-
-
-## Tech Stack
-
-- **Backend:** Django (Python)
-- **Frontend:** HTML, CSS, JavaScript (progressive TypeScript integration)
-- **Database:** SQLite (development), configurable for PostgreSQL/MySQL
-- **Testing:** Django Test Framework (unit & integration tests)
-
-## Setup & Installation
-
-1. **Clone the repository:**
-    ```sh
-    git clone https://github.com/your-username/ExampleMusicApp.git
-    cd music_app
-    ```
-
-2. **Mac - Create and activate a virtual environment:**
-- **Install Homebrew** (if not already installed):
+1. **Install Homebrew** (if not already installed):
     ```bash
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     ```
 
-- **Install Miniconda**:
+2. **Install Git**:
+    - link: https://git-scm.com/downloads/mac
+
+3. **Install Miniconda**:
     ```bash
     brew install --cask miniconda
     ```
 
-3. **Software dependencies:**
-- **Create Conda Environment**:
+
+### Docker
+
+1. **Download Docker Desktop for mac:**:
+    - link: https://www.docker.com/
+
+2. **Test installation**:
     ```bash
-    conda env create -f ./environment.yml -n music_app
-    ```
-- **Update Conda Environment**:
-    ```bash
-    conda env update --name music_app --file ./environment.yml --prune
+    docker --version
+    docker-compose --version
     ```
 
-4. **Run database migrations:**
-    ```sh
+
+### Create conda env
+1. Create the virutal env via the environment.yml file
+    ```bash
+    conda env create environment.yml -n music_app
+    ```
+    ```bash
+    conda init
+    ```
+
+2. Close the terminal and open a new, then run the following command:
+    ```bash
+    source ~/.bash_profile
+    ```
+
+3. Run conda acivate conda_env_name
+
+
+### Installing psycopg2
+1. Run the following command:
+    ```bash
+    brew install postgresql
+    ```
+
+2. Export the path
+    ```bash
+    brew install postgresql
+    ```
+
+3. Run pip install:
+    ```bash
+    pip install psycopg2==2.9.10
+    ```
+    
+
+### Running the Application for Debug
+
+1. **Create Database Migrations**:
+    ```bash
+    python manage.py makemigrations
+    ```
+
+2. **Run Database Migrations**:
+    ```bash
     python manage.py migrate
     ```
 
-5. **Create a superuser (admin):**
-    ```sh
+3. **Create Superuser**:
+    ```bash
     python manage.py createsuperuser
     ```
 
-6. **Start the server:**
-    ```sh
+4. **Run the Server**:
+    ```bash
     python manage.py runserver
     ```
 
-7. **Open your browser at:**
+### API References
+
+- **Admin Panel**: [http://localhost:8000/admin/](http://localhost:8000/admin/)
+- **Main Website**: [http://localhost:8000/](http://localhost:8000/)
+
+### Docker
+
+1. **Install Docker Compose**:
+    ```bash
+    sudo apt-get install -y docker-compose
     ```
-    http://127.0.0.1:8000/
+
+2. **Run Docker Compose**:
+    ```bash
+    docker-compose up
     ```
-
-## Testing
-
-To run tests for the app:
-
-```sh
-python manage.py test music_app

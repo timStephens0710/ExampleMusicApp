@@ -1,0 +1,60 @@
+{% extends "layout_app_auth.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+<!-- start nav-bar -->
+<header class="header">
+  <nav class="navbar">
+        <ul class="music-navbar-container-app">
+            <li><a  href="{% url 'the_feed' %}" class="nav-link">The Feed</a></li>
+            <li><a  href="{% url 'user_profile' username=request.user.username %}" class="nav-link">Profile</a></li>
+            <li><a  href="{% url 'user_logout' %}" class="nav-link">Logout</a></li>
+        </ul>
+  </nav>
+</header>
+<!-- end nav-bar -->
+
+<!-- start overview -->
+<section class="page-details">
+    <div class="container align-items-center justify-content-between page-info">
+        <h2>My Playlists</h2>
+        <div class="mb-2 my-4">
+            <div class="logging-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Owner</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Private/Public</th>
+                                <th scope="col">Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_playlist in user_playlists %}
+                            <tr class="row_table">
+                                <td class="user_playlist_name"><a href="{% url 'view_edit_playlist' username=request.user.username playlist_name=user_playlist.playlist_name%}" class="nav-link">{{user_playlist.playlist_name}}</a></td>
+                                <td class="user_playlist_owner">{{user_playlist.owner.username}}</td>
+                                <td class="user_playlist_type">{{user_playlist.playlist_type}}</td>
+                                <td class="user_playlist_description">{{user_playlist.description}}</td>
+                                <td class="user_playlist_is_private">{{user_playlist.is_private}}</td>
+                                <td class="user_playlist_updated">{{user_playlist.date_updated}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- end overview -->
+
+<div>
+  <a  href="{% url 'create_playlist' username=request.user.username %}" class="nav-link">Create Playlist</a>
+</div>
+{% endblock content %}

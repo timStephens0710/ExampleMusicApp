@@ -1,0 +1,53 @@
+{% extends "layout_app_auth.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+<!-- start nav-bar -->
+<header class="header">
+  <nav class="navbar">
+        <ul class="music-navbar-container-app">
+            <li><a  href="{% url 'the_feed' %}" class="nav-link">The Feed</a></li>
+            <li><a  href="{% url 'user_profile' username=request.user.username %}" class="nav-link">Profile</a></li>
+            <li><a  href="{% url 'user_logout' %}" class="nav-link">Logout</a></li>
+        </ul>
+  </nav>
+</header>
+<!-- end nav-bar -->
+
+<body>
+    <h1> Create Playlist </h1>
+</body>
+
+<!-- Create Playlist Form-->
+<section class="page-details">
+    <div class="container align-items-center justify-content-between page-info">
+        <form id="auth-form" class="form-group" method="POST" action="{{ form_action_url }}" enctype="multipart/form-data">
+            <title> Create a Playlist </title>
+            {% csrf_token %}
+                <fieldset class="form-group my-4">
+                    <div class="auth-form-input">
+                            {{ form.playlist_name|as_crispy_field }}
+                            <!--Include a validator for an email that already exists-->
+                    </div>
+                    <div class="auth-form-input">
+                            {{ form.playlist_type|as_crispy_field }}
+                    </div>
+                    <div class="auth-form-input">
+                            {{ form.description|as_crispy_field }}
+                    </div>
+                    <div class="auth-form-input">
+                            {{ form.is_private|as_crispy_field }}
+                    </div>
+                    <div class="button-container">
+                        <input type="submit" id="submit-button" class="btn button-style" value="Create">
+                    </div>
+                </fieldset>
+            </div>       
+        </form>
+</section>
+<!-- end CreatePlaylistForm -->
+
+
+{% endblock content %}

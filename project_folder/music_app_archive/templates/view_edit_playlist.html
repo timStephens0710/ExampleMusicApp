@@ -1,0 +1,86 @@
+{% extends "layout_app_auth.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+<!-- start nav-bar -->
+<header class="header">
+  <nav class="navbar">
+        <ul class="music-navbar-container-app">
+            <li><a  href="{% url 'the_feed' %}" class="nav-link">The Feed</a></li>
+            <li><a  href="{% url 'user_profile' username=request.user.username %}" class="nav-link">Profile</a></li>
+            <li><a  href="{% url 'user_logout' %}" class="nav-link">Logout</a></li>
+        </ul>
+  </nav>
+</header>
+<!-- end nav-bar -->
+
+<body>
+    <h1> {{playlist_name}} by {{username}}</h1>
+</body>
+<p>
+  <h2> d-.-b </h2>
+</p>
+
+<!-- start of playlist -->
+<section class="page-details">
+    <div class="container align-items-center justify-content-between page-info">
+        <div class="mb-2 my-4">
+            <div class="logging-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Track Title</th>
+                                <th scope="col">Artist</th>
+                                <th scope="col">Album</th>
+                                <th scope="col">Link</th>
+                                <th scope="col">Added By</th>
+                                <th scope="col">Date Added</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for track in list_of_tracks %}
+                            <tr class="row_table">
+                                <td class="playlist_position">{{track.position}}</td>
+                                <td class="playlist_track_name">{{track.track_name}}</td>
+                                <td class="playlist_track_artist">{{track.artist}}</td>
+                                <td class="playlist_track_album">{{track.album_name}}</td>
+                                <td class="playlist_track_streaming_links">
+                                    {% if track.streaming_links %}
+                                        {% for link in track.streaming_links %}
+                                            <a href="{{link.url}}" target="_blank" rel="noopener noreferrer" title="{{link.platform}}">
+                                                {{link.platform}}
+                                            </a>
+                                            {% if not forloop.last %} | {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">No links</span>
+                                    {% endif %}
+                                </td>
+                                <td class="playlist_track_added_by">{{track.added_by}}</td>
+                                <td class="playlist_track_date_added">{{track.date_added|date:"M d, Y"}}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    No tracks in this playlist yet. 
+                                    <a href="{% url 'add_track_to_playlist' username=username playlist_name=playlist_name %}">Add your first track!</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- end of playlist -->
+
+<div>
+  <a  href="{% url 'add_streaming_link_to_playlist' username=username  playlist_name=playlist_name %}" class="nav-link">Add track</a>
+</div>
+{% endblock content %}
