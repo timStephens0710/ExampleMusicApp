@@ -24,7 +24,8 @@ This Django project implements a secure and fully-featured user authentication w
 9. [Email Templates](#email-templates)  
 10. [Logging](#logging)  
 11. [Error Handling](#error-handling)
-11. [Testing](#testing)
+12. [Testing](#testing)
+13. [Security Considerations](#security-considerations)
 
 
 ---
