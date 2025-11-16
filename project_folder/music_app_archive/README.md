@@ -22,7 +22,7 @@ It lets authenticated users create playlists, add tracks (via streaming links or
 - [How to Run (Dev)](#how-to-run-dev)  
 - [Testing](#testing)  
 - [TODO / Improvements](#todo--improvements)
-- [Performance Optimization](#performance--optimization)
+- [Performance Optimization](#performance-optimization)
 - [Security Considerations](#security-considerations)
 
 
@@ -526,6 +526,8 @@ tests/
 ## TODO / Improvements
 
 ### High Priority
+- **Implement Typescript** - dramatically improve the front-end
+- **Fix get_playlist_tracks bug** - currently doesn't work as intended when called in the view
 - **UI for removing tracks** - Add delete functionality in playlist view
 - **Track reordering** - Drag-and-drop to update position
 - **Duplicate prevention** - Pre-check before DB save
