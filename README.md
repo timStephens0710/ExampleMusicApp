@@ -86,7 +86,7 @@ The application follows Django's multi-app architecture with clear separation of
             │
             ├─────────────────┬─────────────────────┐
             │                 │                     │
-┌───────────▼─────────┐ ┌────▼──────────────┐ ┌───▼────────────────┐
+┌───────────▼─────────┐ ┌─────▼─────────────┐ ┌─────▼──────────────┐
 │  music_app_auth     │ │ music_app_archive │ │   Third-Party      │
 │  (Authentication)   │ │ (Playlist Mgmt)   │ │   Platforms        │
 │                     │ │                   │ │                    │

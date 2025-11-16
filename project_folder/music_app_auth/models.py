@@ -106,16 +106,3 @@ class OneTimeToken(models.Model):
 
     #Pull through the manager
     objects = CustomOneTimeTokenManager()
-
-'''
-#TODO create tables for acrhiving and posting:
-    - Follow
-    - PlaylistCollaborator
-    - Like
-    - BasePost
-    - TrackPost
-    - PlaylistPost
-    - Activity
-    - Notification
-    - Comment
-'''
