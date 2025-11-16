@@ -708,7 +708,7 @@ See [`music_app_archive/src/integrations/README.md`](music_app_archive/src/integ
 
 - **Project Overview:** This file
 - **Authentication Module:** [`music_app_auth/README.md`](music_app_auth/README.md)
-- - **Authentication SRC code Module:** [`music_app_auth/src/README.md`](music_app_auth/src/README.md)
+- **Authentication SRC code Module:** [`music_app_auth/src/README.md`](music_app_auth/src/README.md)
 - **Archive Module:** [`music_app_archive/README.md`](music_app_archive/README.md)
 - **Services Layer:** [`music_app_archive/src/README.md`](music_app_archive/src/README.md)
 - **API Integrations:** [`music_app_archive/src/integrations/README.md`](music_app_archive/src/integrations/README.md)
