@@ -2,7 +2,9 @@
 
 A Django-based web application for managing music playlists with automatic metadata extraction from streaming platforms. The app provides secure user authentication, playlist creation/management, and integration with external music platforms (YouTube, Bandcamp, etc.) to automatically fetch track information.
 
-**Please note** the music_app_auth & music_app_archive are currently POC. The main reason for this project is to learn TypeScript. I'm now prioritising the implementation of TypeScript.
+**Please note** the music_app_auth & music_app_archive are currently POC. The main reason for this project is to learn TypeScript. I'm now prioritising the implementation of TypeScript. Also as a **POC** everything is run locally. I will also add a docker file in the next iteration.
+
+
 
 ---
 
@@ -77,7 +79,7 @@ The application follows Django's multi-app architecture with clear separation of
 ┌─────────────────────────────────────────────────┐
 │              music_app_main                     │
 │        (Project Configuration)                  │
-│  - settings.py, urls.py, wsgi.py               │
+│  - settings.py, urls.py, wsgi.py                │
 │  - Database configuration                       │
 │  - Middleware & authentication backends         │
 └───────────┬─────────────────────────────────────┘
@@ -90,8 +92,8 @@ The application follows Django's multi-app architecture with clear separation of
 │                     │ │                   │ │                    │
 │ - User registration │ │ - Playlists       │ │ - YouTube API      │
 │ - Email verification│ │ - Tracks          │ │ - Bandcamp         │
-│ - Login/Logout      │ │ - Streaming links │ │ - Spotify (future) │
-│ - Password reset    │ │ - Metadata fetch  │ │ - SoundCloud       │
+│ - Login/Logout      │ │ - Streaming links │ │ - SoundCloud       │
+│ - Password reset    │ │ - Metadata fetch  │ │ - Nina.            │
 │ - Token management  │ │ - Query optimize  │ │                    │
 └─────────────────────┘ └───────────────────┘ └────────────────────┘
 ```
@@ -433,7 +435,7 @@ music-app/                        # Project root
 
 - Python 3.8+
 - pip or conda
-- PostgreSQL/MySQL/SQLite
+- SQLite
 - Git
 
 ### 1. Clone Repository
@@ -583,7 +585,7 @@ tests/
 ### Backend
 - **Django 4.0+** - Web framework
 - **Python 3.8+** - Programming language
-- **PostgreSQL** - Primary database (SQLite for dev)
+- **SQLite** - Primary database as currently operating in DEV for the POC
 - **Django ORM** - Database abstraction
 
 ### Frontend
@@ -595,11 +597,10 @@ tests/
 ### External Services
 - **YouTube Data API v3** - Video metadata
 - **Google SMTP** - Email sending
-- **Bandcamp** - Web scraping for metadata
+- **Bandcamp** - Web scraping for metadatam that I created myself.
 
 ### Development Tools
 - **Django Debug Toolbar** - Development debugging
-- **Coverage.py** - Test coverage reporting
 - **Git** - Version control
 - **VS Code/PyCharm** - IDE
 
@@ -611,12 +612,11 @@ tests/
 
 | Platform | Status | Method | Documentation |
 |----------|--------|--------|--------------|
-| YouTube | ✅ Live | Official API | [YouTube API Docs](https://developers.google.com/youtube/v3) |
-| YouTube Music | ✅ Live | Official API | Same as YouTube |
-| Bandcamp | ✅ Live | Web Scraping | Custom JSON-LD parser |
-| Spotify | 🔄 Planned | Official API | [Spotify API Docs](https://developer.spotify.com/documentation/web-api/) |
+| YouTube | Live | Official API | [YouTube API Docs](https://developers.google.com/youtube/v3) |
+| YouTube Music | Live | Official API | Same as YouTube |
+| Bandcamp | Live | Web Scraping | Custom JSON-LD parser |
 | SoundCloud | 🔄 Planned | Web Scraping | API deprecated |
-| Apple Music | 📋 Future | Official API | Requires Apple Developer account |
+| Nina | 🔄 Planned | Web Scraping | Custom JSON-LD parser |
 
 ### Integration Architecture
 
