@@ -1,0 +1,33 @@
+{% extends "layout_app_auth.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+<!-- start nav-bar -->
+<header class="header">
+  <nav class="navbar">
+    <ul class="navbar-container" >
+      <li><a href="{% url 'music_app_home' %}" class="nav-link">Home</a></li>
+      <li><a href="{% url 'user_login' %}" class="nav-link">Login</a></li>
+      <li><a href="{% url 'user_registration' %}" class="nav-link">Sign Up</a></li>
+    </ul>
+  </nav>
+</header>
+<!-- end nav-bar -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music App</title>
+</head>
+<body class="body">
+        <h1> d-.-b One for heads d-.-b </h1>
+        <p> Music archiving tool. </p>
+
+</body>
+</html>
+
+{% endblock content %}

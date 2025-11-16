@@ -1,0 +1,56 @@
+{% extends "layout_app_auth.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+{% if add_track_to_playlist_form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ add_track_to_playlist_form.non_field_errors }}
+    </div>
+{% endif %}
+
+
+{% if add_streaming_link_to_track_form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ add_streaming_link_to_track_form.non_field_errors }}
+    </div>
+{% endif %}
+
+<!-- start nav-bar -->
+<header class="header">
+  <nav class="navbar">
+        <ul class="music-navbar-container-app">
+            <li><a  href="{% url 'the_feed' %}" class="nav-link">The Feed</a></li>
+            <li><a  href="{% url 'user_profile' username=request.user.username %}" class="nav-link">Profile</a></li>
+            <li><a  href="{% url 'user_logout' %}" class="nav-link">Logout</a></li>
+        </ul>
+  </nav>
+</header>
+<!-- end nav-bar -->
+
+<!-- Start Track Form-->
+<section class="page-details">
+    <div class="container align-items-center justify-content-between page-info">
+        <form id="auth-form" class="form-group" method="POST" action="{{ form_action_url }}" enctype="multipart/form-data">
+            <title> Add link to {{playlist_name}} </title>
+            {% csrf_token %}
+                <fieldset class="form-group my-4">
+                    <div class="auth-form-input">
+                            {{ add_streaming_link_to_playlist_form.track_type|as_crispy_field }}
+                    </div>
+                    <div class="auth-form-input">
+                            {{ add_streaming_link_to_playlist_form.streaming_link|as_crispy_field }}
+                    </div>
+                    <div class="button-container">
+                        <input type="submit" id="submit-button" class="btn button-style" value="Submit">
+                    </div>
+                </fieldset>
+            </div>       
+        </form>
+
+</section>
+<!-- end Track Form -->
+
+
+{% endblock content %}
