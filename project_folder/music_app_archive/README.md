@@ -13,7 +13,7 @@ It lets authenticated users create playlists, add tracks (via streaming links or
 - [Important models & forms (overview)](#important-models--forms-overview)  
 - [Integrations & external APIs](#integrations--external-apis)  
 - [Error handling & logging](#error-handling--logging)  
-- [Project structure (suggested)](#project-structure-suggested)  
+- [Project structure](#project-structure)  
 - [Templates](#templates)  
 - [Requirements](#requirements)  
 - [Environment variables](#environment-variables)  
@@ -80,9 +80,7 @@ It lets authenticated users create playlists, add tracks (via streaming links or
 
 ## Important models & forms (overview)
 
-> Exact model & field names are inferred from views. Adapt as needed.
-
-**Models (used or referenced)**
+**Models**
 
 - `CustomUser` (from `music_app_auth`) — owner/created_by checks.  
 - `Playlist` — fields: `playlist_name`, `owner` (FK), `is_deleted`, `date_created`. Unique constraint expected on `(owner, playlist_name)`.  
@@ -122,7 +120,7 @@ It lets authenticated users create playlists, add tracks (via streaming links or
 
 ---
 
-## Project structure (suggested)
+## Project structure
 
 music_app_archive/
 ├─ admin.py 
