@@ -22,6 +22,9 @@ It lets authenticated users create playlists, add tracks (via streaming links or
 - [How to Run (Dev)](#how-to-run-dev)  
 - [Testing](#testing)  
 - [TODO / Improvements](#todo--improvements)
+- [Performance Optimization](#performance--optimization)
+- [Security Considerations](#security-considerations)
+
 
 ---
 
