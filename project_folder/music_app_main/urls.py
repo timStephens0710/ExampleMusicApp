@@ -22,6 +22,5 @@ urlpatterns = [
 
     #music_app URL's
     path('', include('music_app_auth.urls')),
-    path('music_app_archive/', include('music_app_archive.urls')),
-    path('music_app_social/', include('music_app_social.urls')),
+    path('music_app_archive/', include('music_app_archive.urls'))
 ]

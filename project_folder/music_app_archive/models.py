@@ -167,9 +167,6 @@ class StreamingLink(models.Model):
     PLATFORM_CHOICES = [
         ('youtube', 'YouTube'),
         ('youtube_music', 'YouTube Music'),
-        ('spotify', 'Spotify'),
-        ('soundcloud', 'SoundCloud'),
-        ('nina', 'Nina'),
         ('bandcamp', 'Bandcamp')
         ]
 
@@ -208,12 +205,9 @@ class StreamingLink(models.Model):
         Validate URL matches the selected platform
         '''
         platform_domains = {
-            'spotify': ['spotify.com', 'open.spotify.com'],
             'youtube': ['youtube.com'],
             'youtube_music': ['music.youtube.com'],
             'soundcloud': ['soundcloud.com'],
-            'bandcamp': ['bandcamp.com'],
-            'nina': ['ninaprotocol.com']
         }
 
         domain_list = platform_domains.get(self.streaming_platform, [])

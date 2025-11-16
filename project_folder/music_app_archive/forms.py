@@ -50,9 +50,6 @@ class AddStreamingLink(forms.Form):
 
     PLATFORM_CHOICES = [
         ('youtube', 'YouTube'),
-        ('spotify', 'Spotify'),
-        ('soundcloud', 'SoundCloud'),
-        ('nina', 'Nina'),
         ('bandcamp', 'Bandcamp'),
     ]
 

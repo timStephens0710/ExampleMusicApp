@@ -60,9 +60,8 @@ INSTALLED_APPS = [
 
     #My music_apps
     'music_app_auth',
-    'music_app_archive',
-    'music_app_social',
-]
+    'music_app_archive'
+    ]
 
 #Tell Django to use the CustomUser model instead of auth.User
 AUTH_USER_MODEL = 'music_app_auth.CustomUser'
