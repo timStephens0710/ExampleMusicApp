@@ -166,17 +166,36 @@ Templates should display `messages` and iterate over `list_of_tracks` (see `view
 ---
 
 ## Requirements
-
-- Python 3.10+ (or matching project version)  
-- Django 4.x (or the version used by the project)  
-- Database: PostgreSQL recommended, SQLite OK for development  
 - Additional libs for integrations (e.g., `google-api-python-client` for YouTube) — pin to `requirements.txt`
 
 Install dependencies:
 - Refer to environment.yml
 
+---
+
+## Testing
+
+Run the test suite:
+
+```bash
+# Run all tests
+python manage.py test music_app_archive
+
+# Run specific test file
+python manage.py test music_app_archive.tests.test_views
+
+# Run with coverage
+coverage run --source='.' manage.py test music_app_archive
+coverage report
+```
+
+---
+
+
 ## TODO / improvements
 * UI for removing tracks from playlists and reordering (update position).
+
+* Make the bandcamp.py more robust. As the code breaks if Bandcamp changes page structure
 
 * Pre-check to prevent duplicate tracks in the same playlist before DB save.
 

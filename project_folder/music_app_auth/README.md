@@ -41,14 +41,14 @@ This module provides a secure, logged, token-based authentication system for the
 
 ## Features
 
-- ✔ Email verification  
-- ✔ Token-based password reset  
-- ✔ Custom user model (`CustomUser`)  
-- ✔ Centralised exception handling  
-- ✔ Detailed logging via `AppLogging`  
-- ✔ Resend-token functionality  
-- ✔ CSRF-protected Django forms  
-- ✔ User-friendly error pages  
+- Email verification  
+- Token-based password reset  
+- Custom user model (`CustomUser`)  
+- Centralised exception handling  
+- Detailed logging via `AppLogging`  
+- Resend-token functionality  
+- CSRF-protected Django forms  
+- User-friendly error pages  
 
 ---
 
@@ -59,14 +59,14 @@ This module provides a secure, logged, token-based authentication system for the
 2. Account is created in an unverified state.  
 3. A one-time authentication token is generated.  
 4. User receives an email containing a verification link.  
-5. User is redirected to a “check your email” page.
+5. User is redirected to a "check your email" page.
 
 ---
 
 ### 2. Email Verification
 1. User clicks the verification link.  
 2. Token is validated → marked used → deactivated.  
-3. User’s `email_verified` flag is set to `True`.  
+3. User's `email_verified` flag is set to `True`.  
 4. User sees a success confirmation page.  
 5. A new token can be requested if the original expires.
 
@@ -89,7 +89,7 @@ These are shown to the user via Django messages.
 1. User enters their email.  
 2. A reset-password token is generated.  
 3. User receives an email with a secure link.  
-4. Redirected to a “check your email” page.  
+4. Redirected to a "check your email" page.  
 5. Option to request a new token.
 
 ---
@@ -127,127 +127,194 @@ The `OneTimeToken` model manages authentication and password-reset tokens. Token
 |------|---------|
 | `home` | Landing page |
 | `user_registration` | Register user + send verification email |
-| `user_authentication` | “Check email” page + resend authentication email |
+| `user_authentication` | "Check email" page + resend authentication email |
 | `user_authentication_success` | Email verification confirmation |
 | `user_login` | Sign in using email and password |
 | `user_logout` | Logout confirmation |
 | `user_forgotten_password` | Request password reset |
-| `check_your_email_password` | “Check email” page for password reset |
+| `check_your_email_password` | "Check email" page for password reset |
 | `user_reset_password` | Set new password (token protected) |
 | `user_success_reset_password` | Password reset success screen |
 
 ---
 
 ## Project Structure
-app/
-│── common/
-│    ├── backends.py
-│    ├── utils.py
-│    ├── validators.py
-│    └── send_email.py
+
+```
+music_app_auth/
+├── migrations/                  # Database migrations
+│   └── ...
 │
-│── migrations/
+├── src/                        # Business logic and utilities
+│   ├── custom_exceptions.py    # Custom exception classes
+│   └── django_error_utils.py   # Error handling utilities
 │
+├── common/                     # Shared utilities
+│   ├── backends.py            # Custom authentication backend
+│   ├── utils.py               # Token generation utilities
+│   ├── validators.py          # Custom validators
+│   └── send_email.py          # Email sending functionality
 │
-│── src/
-│    ├── custom_exceptioms.py
-│    ├── django_error_utils.py
+├── views/                      # View controllers
+│   ├── app_views.py           # Application-specific views
+│   └── main_views.py          # Core authentication views
 │
+├── tests/                      # Test suite
+│   ├── test_email_backend.py # Email backend tests
+│   ├── test_models.py         # Model tests
+│   └── test_views.py          # View tests
 │
-│── views/
-│    ├── app_views.py
-│    └── main_views.py
+├── templates/                  # HTML templates
+│   ├── authentication_email.html
+│   ├── reset_password_email.html
+│   └── ...
 │
-│── models.py    
-│
-│── tests
-│    ├── test_email_backend.py
-│    ├── test_models.py
-│    ├── test_views.py
-│
-│── urls.py
-│── managers.py
-│── forms.py
-│── admin.py
-│
-│── src/
-│    ├── django_error_utils.py
-│    ├── custom_exceptions.py
-│
-│── common/
-│    ├── utils.py (token generation)
-│    ├── send_email.py
+├── models.py                   # Database models (CustomUser, OneTimeToken, AppLogging)
+├── forms.py                    # Django forms (RegistrationForm, LoginForm, etc.)
+├── managers.py                 # Custom model managers
+├── admin.py                    # Django admin configuration
+├── urls.py                     # URL routing
+└── README.md                   # This file
+```
 
 ---
 
 ## Requirements
 
-- Refer to environment.yml
+Refer to `environment.yml` for full package dependencies.
+
+**Key Dependencies:**
+- Email backend (SMTP configuration)
+
+---
 
 ## How to Run
-1. Make migrations
+
+### 1. Make migrations
+```bash
 python manage.py makemigrations
+```
 
-2. Apply migrations
+### 2. Apply migrations
+```bash
 python manage.py migrate
+```
 
-3. Create a superuser (optional)
+### 3. Create a superuser (optional)
+```bash
 python manage.py createsuperuser
+```
 
-4. Start the server
+### 4. Start the server
+```bash
 python manage.py runserver
+```
 
+App available at: **http://127.0.0.1:8000/**
 
-App available at:
-
-http://127.0.0.1:8000/
+---
 
 ## Email Templates
 
-Required email templates:
+Required email templates (located in `templates/`):
 
-authentication_email.html
+### `authentication_email.html`
+Sent when user registers.
 
-reset_password_email.html
+**Expected context:**
+- `username` - User's username
+- `authentication_link` - Email verification URL
 
-Located in:
+### `reset_password_email.html`
+Sent when user requests password reset.
 
-templates/
+**Expected context:**
+- `username` - User's username
+- `reset_password_link` - Password reset URL
 
-
-Each expects:
-
-username
-
-authentication_link or reset_password_link
+---
 
 ## Logging
 
-The project logs all major events via AppLogging, including:
-* Registration submissions
+The project logs all major events via the `AppLogging` model, including:
 
-* Authentication email sent
+- Registration submissions
+- Authentication email sent
+- Password reset requested
+- Tokens deactivated
+- Password successfully changed
 
-* Password reset requested
+This enables auditability and debugging.
 
-* Tokens deactivated
+**Log Entry Format:**
+```python
+AppLogging.objects.create(
+    user_id=user.id,
+    log_text="User registered successfully"
+)
+```
 
-* Password successfully changed
-
-* This enables auditability and debugging.
+---
 
 ## Error Handling
 
-Errors are handled using:
+Errors are handled using the custom error handler in:
 
+```
 src/django_error_utils.py
-
+```
 
 This system:
-* Captures unexpected exceptions
+- Captures unexpected exceptions
+- Builds context for the template
+- Renders a clean `error_page.html`
+- Custom exceptions help guide users with clear, user-friendly messages
 
-* Builds context for the template
+### Custom Exceptions
 
-* Renders a clean error_page.html
+Defined in `src/custom_exceptions.py`:
 
-* Custom exceptions help guide users with clear, user-friendly messages.
+```python
+class EmailNotFound(Exception):
+    """Raised when email doesn't exist in database"""
+    pass
+
+class IncorrectPassword(Exception):
+    """Raised when password is incorrect"""
+    pass
+
+class UnverifiedEmail(Exception):
+    """Raised when user tries to login with unverified email"""
+    pass
+```
+
+---
+
+## Testing
+
+Run the test suite:
+
+```bash
+# Run all tests
+python manage.py test music_app_auth
+
+# Run specific test file
+python manage.py test music_app_auth.tests.test_views
+
+# Run with coverage
+coverage run --source='.' manage.py test music_app_auth
+coverage report
+```
+
+---
+
+## Security Considerations
+
+- One-time tokens expire after use
+- Tokens are time-limited (configurable)
+- Passwords are hashed using Django's default hasher
+- CSRF protection on all forms
+- Email verification required before login
+- Secure token generation using secrets module
+
+---
