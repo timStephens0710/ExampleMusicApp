@@ -20,11 +20,12 @@ This Django project implements a secure and fully-featured user authentication w
 5. [Views Summary](#views-summary)  
 6. [Project Structure](#project-structure)  
 7. [Requirements](#requirements)  
-8. [Environment Variables](#environment-variables)  
-9. [How to Run](#how-to-run)  
-10. [Email Templates](#email-templates)  
-11. [Logging](#logging)  
-12. [Error Handling](#error-handling)
+8. [How to Run](#how-to-run)  
+9. [Email Templates](#email-templates)  
+10. [Logging](#logging)  
+11. [Error Handling](#error-handling)
+11. [Testing](#testing)
+
 
 ---
 
