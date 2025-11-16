@@ -3,7 +3,7 @@
 `music_app_archive` is the archive / playlist management module for the Music App.  
 It lets authenticated users create playlists, add tracks (via streaming links or manual entry), manage streaming links, and view/edit playlists. The app integrates with platform APIs (e.g., YouTube, Bandcamp) to fetch metadata, logs user activity, and uses transactional saves to keep playlist/track/link data consistent.
 
-Please note this is currently a POC, I'm now going to prioritise implementing TypeScript as the main reason for this project was to teach myself TypeScript.
+**Please note this is currently a POC**, I'm now going to prioritise implementing TypeScript as the main reason for this project was to teach myself TypeScript.
 
 ---
 
