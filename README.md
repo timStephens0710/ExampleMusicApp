@@ -441,6 +441,27 @@ music-app/                        # Project root
 - SQLite
 - Git
 
+### Installation Process
+
+#### Mac
+
+1. **Install Homebrew** (if not already installed):
+    ```bash
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    ```
+
+2. **Install Miniconda**:
+    ```bash
+    brew install --cask miniconda
+    ```
+
+#### Windows
+
+1. **Download and Install Miniconda** from the [official website](https://docs.conda.io/en/latest/miniconda.html).
+
+2. **Open Anaconda Prompt** and follow the Software Dependencies and Running the Application for Debug steps.
+
+
 ### 1. Clone Repository
 
 ```bash
@@ -477,8 +498,6 @@ SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/music_app_db
 
 # Email
 EMAIL_HOST=smtp.gmail.com
@@ -541,11 +560,6 @@ Visit: **http://127.0.0.1:8000/**
 # Start development server
 python manage.py runserver
 
-# Run on specific port
-python manage.py runserver 8080
-
-# Run on all interfaces
-python manage.py runserver 0.0.0.0:8000
 ```
 
 ---
