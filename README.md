@@ -493,6 +493,26 @@ music-app/                        # Project root
 
 ## Quick Start
 
+### Installation Process
+
+#### Mac
+
+1. **Install Homebrew** (if not already installed):
+    ```bash
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    ```
+
+2. **Install Miniconda**:
+    ```bash
+    brew install --cask miniconda
+    ```
+
+#### Windows
+
+1. **Download and Install Miniconda** from the [official website](https://docs.conda.io/en/latest/miniconda.html).
+
+2. **Open Anaconda Prompt** and follow the Software Dependencies and Running the Application for Debug steps.
+
 ### Local Development
 
 #### Prerequisites
