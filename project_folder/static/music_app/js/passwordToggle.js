@@ -1,0 +1,2 @@
+document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll(".show-password-toggle").forEach(o=>{const e=o.closest("form");if(!e){console.warn("No form found for password toggle");return}const s=e.querySelectorAll('input[type="password"]');if(s.length===0){console.warn("No password fields found in form");return}o.addEventListener("change",()=>{s.forEach(r=>{r.type=o.checked?"text":"password"})})}),console.log("Password toggle initialized")});
+//# sourceMappingURL=passwordToggle.js.map

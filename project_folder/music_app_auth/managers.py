@@ -5,8 +5,6 @@ from django.utils.translation import gettext_lazy as _
 
 from .src.custom_exceptions import EmailNotFound
 
-#TODO see if I should add a manager for retirieving the tokens based on the filters I use in he views.py
-
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager where email is the unique identifiers

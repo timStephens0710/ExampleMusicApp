@@ -35,9 +35,11 @@ class UserRegistrationTests(TestCase):
             , 'password1': self.valid_password
             , 'password2': self.valid_password
         })
+        #Get user
+        user = CustomUser.objects.first()
 
         #Check the correct redirect
-        self.assertRedirects(response, reverse("user_authentication", args=[1]))
+        self.assertRedirects(response, reverse("user_authentication", args=[user.id]))
 
        #Check that authenticatoin email has been sent
         self.assertEqual(len(mail.outbox), 1)
@@ -113,8 +115,6 @@ class UserResetPasswordTests(TestCase):
         - Positive results, that is, the password is updated and teh user can loging
         - Negative test case:
             - Incorrect email address
-
-    #TODO add negative test cases.
     '''
     def setUp(self):
         self.user = CustomUser.objects.create_user(
@@ -173,8 +173,6 @@ class UserResendPasswordEmail(TestCase):
             - A new token is generated.
             - The original token is_active = False
             - The reset password email is sent again with subject 'Rest Password'
-
-    #TODO add negative test cases.
     '''
     def setUp(self):
         self.user = CustomUser.objects.create_user(

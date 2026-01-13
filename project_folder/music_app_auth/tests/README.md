@@ -18,4 +18,7 @@ This README provides an outline of the testing process, its importance, and guid
 
 * Django tests:
 In your terminal, run the following command:
-`python manage.py test music_app_auth`
+`docker compose up -d`
+`docker compose exec web python manage.py makemigrations`
+`docker compose exec web python manage.py migrate`
+`docker compose exec web python manage.py test --settings=music_app_main.settings_test`

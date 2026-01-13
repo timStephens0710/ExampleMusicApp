@@ -12,9 +12,6 @@ import uuid
 class Playlist(models.Model):
     '''
     The following model contains all of the high-level information regarding the playlists that a user has created.
-
-    #TODO:
-        - Consider adding a UUID field for security reasons later on in development.
     '''
     PLAYLIST_TYPES = (
         ('tracks', 'Tracks'),
@@ -107,12 +104,6 @@ class Track(models.Model):
         - Sample
 
     Uniqueness to be enforced via StreamingLink URLS, not track names, to handle remixes, live versions etc.
-
-    #TODO:
-        - Consider adding a field for the cover art
-            - That will probably tie in with my future design to only display the cover art.
-        - Add track_duration
-        - Create a function in a view or the API to handle duplicate track_names + artists        
     '''
     TRACK_TYPE = (
         ('track', 'Track'),
@@ -207,7 +198,7 @@ class StreamingLink(models.Model):
         platform_domains = {
             'youtube': ['youtube.com'],
             'youtube_music': ['music.youtube.com'],
-            'soundcloud': ['soundcloud.com'],
+            'bandcamp': ['bandcamp.com'],
         }
 
         domain_list = platform_domains.get(self.streaming_platform, [])

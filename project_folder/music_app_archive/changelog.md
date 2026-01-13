@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+# 2026-01-13
+### Removed
+* Unsupported streaming platforms from the models and forms to avoid confusion
+
+
 # 2025-11-16
 ### Added
 * Views to handle the archive

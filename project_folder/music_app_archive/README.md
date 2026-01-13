@@ -142,7 +142,7 @@ Fields:
 ```python
 Fields:
 - track (FK to Track)
-- streaming_platform (CharField: 'youtube', 'spotify', etc.)
+- streaming_platform (CharField: 'youtube', 'bandcamp')
 - streaming_link (URLField, unique)
 - added_by (FK to CustomUser)
 - created_at (DateTimeField)

@@ -12,9 +12,6 @@ User = get_user_model()
 class UserPlaylistsTest(TestCase):
     '''
     The fillowing test case contains positve and negative test cases for the Playlist model.
-
-    #TODO:
-        - Add playlist deleted 
     '''
     def setUp(self):
         self.user_1 = User.objects.create_user(
@@ -92,7 +89,7 @@ class UserPlaylistsTest(TestCase):
             is_private = 'public'
         )
             
-        self.assertIn('failed', str(context.exception).lower())
+        self.assertIn('violates', str(context.exception).lower())
 
     def test_case_sensitivity_playlist_names(self):
         '''

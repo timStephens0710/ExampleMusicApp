@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 * Refactored project structure by creating folders for esch process:
     * music_app_main
     * music_app_auth
+    * music_app_social
 
 
 # 2025-10-16

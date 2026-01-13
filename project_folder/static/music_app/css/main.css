@@ -111,11 +111,14 @@ authentication process.*/
 
 /* Submit button styling */
 /* The following styling will be applied to all of the buttons used during the auth process.*/
-/* #TODO: unsure if I'll add any styling for the submit-buttons tbc */
 .button-container {
   display: flex;
   justify-content: center;
   margin-top: 20px;
+}
+
+.button-style {
+  color: #6366F1;
 }
 
 .button-style:hover {
