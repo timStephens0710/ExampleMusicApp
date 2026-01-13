@@ -115,8 +115,6 @@ class UserResetPasswordTests(TestCase):
         - Positive results, that is, the password is updated and teh user can loging
         - Negative test case:
             - Incorrect email address
-
-    #TODO add negative test cases.
     '''
     def setUp(self):
         self.user = CustomUser.objects.create_user(
@@ -175,8 +173,6 @@ class UserResendPasswordEmail(TestCase):
             - A new token is generated.
             - The original token is_active = False
             - The reset password email is sent again with subject 'Rest Password'
-
-    #TODO add negative test cases.
     '''
     def setUp(self):
         self.user = CustomUser.objects.create_user(

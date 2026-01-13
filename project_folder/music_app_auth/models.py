@@ -21,17 +21,6 @@ class CustomUser(AbstractUser):
         - Setting 'username' to a required field.
 
     Index has been set to 'email' the get_user_instance_by_email(), from the CustomUserManager() Class is often used in the main_views.py.
-
-
-    #TODO 
-        - add on following field:
-            - Example:
-                following = models.ManyToManyField(
-                    'self',
-                    symmetrical=False,
-                    related_name='followers',
-                    blank=True
-                )
     '''
     #Remove unused built-in fields
     first_name = None

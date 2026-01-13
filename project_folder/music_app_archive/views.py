@@ -273,16 +273,6 @@ def add_track_to_playlist(request, username, playlist_name):
     This form update the Track and StreamingLink models.
         - The Track & StreamingLink model can be updated here
             - The other place is when a user posts (to come later on)
-
-    #TODO:
-        - Build checker function to see if track already exists in Track & Playlist. 
-        - JS or TypeScript built into the form regarding playlist_type + track_type.
-            - That is, if playlist_type is tracks then the user can only submit track_type == 'track'
-            - The exception being 'Liked' Playlist which is a combination of all the posts that a user has liked on their feed.
-        - Once forms are saving and the model is updating correctly, work on building an API
-        to pull all of the relevant meta data relating to the link from the music.
-            - That is, they paste the link from YouTube and I pull all of the meta data to fill in
-            the two forms.
     '''
     #Get user instance via username
     user = get_object_or_404(CustomUser, username=username)
@@ -296,8 +286,6 @@ def add_track_to_playlist(request, username, playlist_name):
 
     #Get playlist instance
     playlist = get_object_or_404(Playlist, playlist_name=playlist_name, owner=user, is_deleted=False)
-
-    #TODO Call function to check if the track exists in Track & Playlist model
 
     #Get youtube_meta_data_dict
     meta_data_dict = request.session.get("meta_data_dict")
@@ -455,9 +443,6 @@ def add_track_to_playlist(request, username, playlist_name):
 def view_edit_playlist(request, username, playlist_name):
     '''
     Displays a specific playlist for a user, where they can edit.
-
-    #TODO:
-        - Add the ability to remove songs
     '''
     #Get user instance via username
     user = get_object_or_404(CustomUser, username=username)

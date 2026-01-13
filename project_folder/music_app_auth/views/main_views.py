@@ -328,7 +328,6 @@ def check_your_email_password(request, user_id):
     The page tells them to check their emails to get the reset password link.
 
     If the user doesn't receive the email, they can click the 'resend' button. 
-    #TODO display successful message to the user if they want the email re-sent.
     '''
     #Get relevant user instance via user_id
     user = CustomUser.objects.get_user_instance_by_id(user_id)

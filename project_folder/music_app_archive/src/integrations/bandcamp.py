@@ -53,7 +53,6 @@ def extract_jsonld_from_bandcamp(bandcamp_url: str)-> dict:
 
 def generate_bandcamp_meta_data_dictionary(jsonld_data: json, bandcamp_url: str) -> dict:
     '''
-    #TODO build in checker for URL in case user submits the album link instead of a track link.
     '''
     #Validate bandcamp_url
     orch_validate_input_string(bandcamp_url, 'bandcamp_url')

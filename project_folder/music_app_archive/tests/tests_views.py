@@ -122,8 +122,6 @@ class AddTrackToPlaylistTest(BaseTestCase):
     Track is successfully added + correct redirection.
 
     this is handy for debugging: print(f"Response content: {response.content.decode()}")
-
-    #TODO fix up this test once I've got Bandcamp added to my API's.
     '''
     def setUp(self):        
         self.track_type = 'track'
@@ -287,12 +285,6 @@ class AddLinkToTrackTest(BaseTestCase):
     view we're testing:
         - add_streaming_link_to_playlist(request, username, playlist_name)
             - url: path('<str:username>/<str:playlist_name>/add_link_to_track', views.add_streaming_link_to_playlist, name = 'add_streaming_link_to_playlist') #add track to a specific playlist
-
-    #TODO Test cases:
-        - positive cases:
-            - Link works
-            - Retrieve youtube_meta_data_dict from request.session
-                - Test the data dictionary is not empty
     '''
     def test_add_streaming_link_to_playlist_positive(self):
         '''
