@@ -124,41 +124,6 @@ Tests URL parsing, hostname extraction, and platform validation.
 null or empty ✗
 ```
 
-### `validateAddTrackForm.test.ts`
-
-Tests form text validation for track metadata (artist, track name, album, etc.).
-
-**Unit Tests**:
-- `checkIsNull` - Mandatory field validation
-  - Non-empty text passes
-  - Empty/null text fails with error message
-
-- `checkLength250` - Maximum length validation
-  - Text under 250 characters passes
-  - Text over 250 characters fails with error message
-
-- `supportedStreamingPlatformIsSelected` - Platform dropdown validation
-  - Supported platforms (YouTube, etc.) pass
-  - Unsupported platforms fail
-
-**Orchestration Tests**:
-- `orchestrateCheckFormText` - Combined validation
-  - Valid text (not null, under 250 chars) passes
-  - Null text fails with appropriate message
-  - Overly long text fails with appropriate message
-
-**Key Test Scenarios**:
-```typescript
-// Valid inputs
-'hello world' ✓ (not null, under 250 chars)
-'YouTube' ✓ (supported platform)
-
-// Invalid inputs
-'' ✗ (empty field)
-'aZ9$kL2mQ#T7r@...[250+ chars]' ✗ (too long)
-'Soundcloud' ✗ (unsupported platform)
-```
-
 ## Test Structure
 
 All test files follow a consistent structure:
