@@ -35,9 +35,11 @@ class UserRegistrationTests(TestCase):
             , 'password1': self.valid_password
             , 'password2': self.valid_password
         })
+        #Get user
+        user = CustomUser.objects.first()
 
         #Check the correct redirect
-        self.assertRedirects(response, reverse("user_authentication", args=[1]))
+        self.assertRedirects(response, reverse("user_authentication", args=[user.id]))
 
        #Check that authenticatoin email has been sent
         self.assertEqual(len(mail.outbox), 1)

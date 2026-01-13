@@ -195,18 +195,20 @@ Detects which streaming platform a URL belongs to.
 **Parameters:**
 - `streaming_link` (str): Full streaming URL
 
-**Returns:** Platform name (`'youtube'`, `'bandcamp'`, `'spotify'`, etc.) or `None` if unsupported
+**Returns:** Platform name (`'youtube'`, `'bandcamp'`, etc.) or `None` if unsupported
 
 **Supported Platforms:**
 ```python
 PLATFORM_DOMAINS = {
     'youtube': ['youtube.com', 'youtu.be', 'music.youtube.com', 'm.youtube.com'],
-    'spotify': ['spotify.com', 'open.spotify.com'],
-    'soundcloud': ['soundcloud.com', 'm.soundcloud.com'],
     'bandcamp': ['bandcamp.com'],
-    'nina': ['ninaprotocol.com']
 }
 ```
+
+Coming soon:
+* Soundcloud
+* Nina
+
 
 **Usage:**
 ```python
@@ -215,8 +217,8 @@ from .src.utils import check_streaming_link_platform
 platform = check_streaming_link_platform('https://youtube.com/watch?v=123')
 # Returns: 'youtube'
 
-platform = check_streaming_link_platform('https://spotify.com/track/456')
-# Returns: 'spotify'
+platform = check_streaming_link_platform('https://horsevision.bandcamp.com/track/how-are-we')
+# Returns: 'bandcamp'
 
 platform = check_streaming_link_platform('https://unknown-site.com')
 # Returns: None

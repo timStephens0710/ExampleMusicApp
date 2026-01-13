@@ -60,9 +60,11 @@
                     <div class="auth-form-input">
                             {{ add_streaming_link_to_track_form.streaming_platform|as_crispy_field }}
                     </div>
+                    <div id="streaming-platform-error" class="error"></div>
                     <div class="auth-form-input">
                             {{ add_streaming_link_to_track_form.streaming_link|as_crispy_field }}
                     </div>
+                    <div id="streaming-link-error" class="error"></div>
                     <div class="button-container">
                         <input type="submit" id="submit-button" class="btn button-style" value="Save">
                     </div>
@@ -72,6 +74,9 @@
 
 </section>
 <!-- end Track Form -->
+
+<script type="module" src=" {% static 'music_app/js/validateStreamingLink.js' %} "> </script>
+
 
 
 {% endblock content %}

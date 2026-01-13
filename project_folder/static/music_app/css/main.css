@@ -118,6 +118,10 @@ authentication process.*/
   margin-top: 20px;
 }
 
+.button-style {
+  color: #6366F1;
+}
+
 .button-style:hover {
   color: #66F523;               /* green hover color */
 }

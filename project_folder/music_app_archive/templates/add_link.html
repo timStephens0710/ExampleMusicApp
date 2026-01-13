@@ -35,6 +35,7 @@
         <form id="auth-form" class="form-group" method="POST" action="{{ form_action_url }}" enctype="multipart/form-data">
             <title> Add link to {{playlist_name}} </title>
             {% csrf_token %}
+            <div id="streaming-link-error" class="error"></div>
                 <fieldset class="form-group my-4">
                     <div class="auth-form-input">
                             {{ add_streaming_link_to_playlist_form.track_type|as_crispy_field }}
@@ -52,5 +53,6 @@
 </section>
 <!-- end Track Form -->
 
+<script type="module" src=" {% static 'music_app/js/validateStreamingLink.js' %} "> </script>
 
 {% endblock content %}

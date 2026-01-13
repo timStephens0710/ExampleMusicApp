@@ -7,10 +7,7 @@ logger.setLevel(logging.INFO)
 
 PLATFORM_DOMAINS = {
     'youtube': ['youtube.com', 'youtu.be', 'music.youtube.com', 'm.youtube.com'],
-    'spotify': ['spotify.com', 'open.spotify.com'],
-    'soundcloud': ['soundcloud.com', 'm.soundcloud.com'],
     'bandcamp': ['bandcamp.com'],
-    'nina': ['ninaprotocol.com']
 }
 
 

@@ -13,41 +13,47 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
-#Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-#Load .env.dev file
+# Load .env.dev file
 load_dotenv(BASE_DIR / ".env.dev")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
+# SECURITY_KEY
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# FIXED: Added localhost and Docker container hostnames
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'web', '0.0.0.0']
 
-#Specify login URL
+# Specify login URL
 LOGIN_URL = 'user_login'
 LOGIN_REDIRECT_URL = 'the_feed/'
 
-#Specify logout URL
+# Specify logout URL
 LOGOUT_REDIRECT_URL = 'logout/'
 
 
 # Application definition
-# Required onyl for Django apps
 INSTALLED_APPS = [
-    # whitenoise_runserver_nostatic needs to remain the top entry in order to also use static file serving in debug.
+    # whitenoise_runserver_nostatic needs to remain the top entry
     'whitenoise.runserver_nostatic',
+    'corsheaders', 
     'crispy_forms',
-    'admin_tools_stats',    # this must be BEFORE 'admin_tools' and 'django.contrib.admin'
+    'admin_tools_stats',
     'django_nvd3',
     'nested_admin',
     'phonenumber_field',
-    'django_db_logger',     # django database logging
+    'django_db_logger',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -55,26 +61,44 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    #My music_apps
+    # My music_apps
     'music_app_auth',
-    'music_app_archive'
-    ]
+    'music_app_archive',
+    'music_app_social',
+]
 
-#Tell Django to use the CustomUser model instead of auth.User
+# Tell Django to use the CustomUser model instead of auth.User
 AUTH_USER_MODEL = 'music_app_auth.CustomUser'
 
-#Set AUTHENTICATION_BACKENDS variable to allow the user to login via the user's email
+# Set AUTHENTICATION_BACKENDS variable to allow the user to login via email
 AUTHENTICATION_BACKENDS = ['music_app_auth.common.backends.EmailBackend']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "django.contrib.admindocs.middleware.XViewMiddleware",
+    'django.contrib.admindocs.middleware.XViewMiddleware',
+]
+
+# CORS Settings for Vite Development Server
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+# Allow credentials (cookies, authorization headers, etc.)
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Settings for frontend
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 ROOT_URLCONF = 'music_app_main.urls'
@@ -101,10 +125,21 @@ WSGI_APPLICATION = 'music_app_main.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+db_url = os.getenv("DATABASE_URL")
+
+if not db_url:
+    raise RuntimeError("DATABASE_URL is not set")
+
+url = urlparse(db_url)
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": url.path[1:],
+        "USER": url.username,
+        "PASSWORD": url.password,
+        "HOST": url.hostname,
+        "PORT": url.port,      
     }
 }
 
@@ -112,13 +147,13 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
-#Specify the password validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8},
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -127,23 +162,22 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
     {
-        'NAME': 'music_app_auth.common.validators.ContainsNumberValidator', # Path to your custom validator
+        'NAME': 'music_app_auth.common.validators.ContainsNumberValidator',
         'OPTIONS': {
-            'min_number': 1 # Require at least 1 numeric character
+            'min_number': 1
         }
     },
     {
-        'NAME': 'music_app_auth.common.validators.SpecialCharacterValidator', # Path to your custom validator
+        'NAME': 'music_app_auth.common.validators.SpecialCharacterValidator',
         'OPTIONS': {
-            'min_symbols': 1, # Require at least 1 special character
-            'symbols': "!@#$%^&*()_+{}[]:;\"'<>,.?/\\|-" # Define the allowed special characters
+            'min_symbols': 1,
+            'symbols': "!@#$%^&*()_+{}[]:;\"'<>,.?/\\|-"
         }
     }
 ]
 
 
 # Mail functionality
-#TODO update these settings below for functional testing.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_FROM = 'test_music_app@home.com'
 
@@ -162,14 +196,32 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 STATIC_URL = '/static/'
+
+# Where Django looks for static files during development
+# Your Vite build outputs here
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# Where collectstatic puts files
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise configuration
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#Reference to platform API key's
+# Reference to platform API key's
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")

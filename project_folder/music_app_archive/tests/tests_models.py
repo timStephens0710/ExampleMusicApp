@@ -92,7 +92,7 @@ class UserPlaylistsTest(TestCase):
             is_private = 'public'
         )
             
-        self.assertIn('failed', str(context.exception).lower())
+        self.assertIn('violates', str(context.exception).lower())
 
     def test_case_sensitivity_playlist_names(self):
         '''

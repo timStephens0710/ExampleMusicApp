@@ -1,0 +1,191 @@
+erDiagram
+    User ||--o{ Post : creates
+    User ||--o{ Playlist : owns
+    User ||--o{ PlaylistCollaborator : "collaborates via"
+    User ||--o{ Follow : "follows (follower)"
+    User ||--o{ Follow : "followed by (following)"
+    User ||--o{ Like : makes
+    User ||--o{ Comment : writes
+    User ||--o{ Activity : "generates (actor)"
+    User ||--o{ Notification : receives
+    User ||--o{ Track : "first created"
+    User ||--o{ StreamingLink : adds
+    User ||--o{ PlaylistTrack : "adds to playlist"
+
+    Post ||--o| TrackPost : "has content"
+    Post ||--o| PlaylistPost : "has content"
+    Post ||--o{ Like : "receives"
+    Post ||--o{ Comment : "has"
+    
+    TrackPost ||--|| Track : references
+    PlaylistPost ||--|| Playlist : references
+    
+    Playlist ||--o{ PlaylistCollaborator : "has collaborators"
+    Playlist ||--o{ PlaylistTrack : contains
+    Playlist ||--o{ PlaylistTag : "tagged with"
+    
+    Track ||--o{ PlaylistTrack : "appears in"
+    Track ||--o{ StreamingLink : "has links"
+    Track ||--o{ TrackTag : "tagged with"
+    
+    Tag ||--o{ PlaylistTag : "tags playlists"
+    Tag ||--o{ TrackTag : "tags tracks"
+    
+    Comment }o--o| Comment : "replies to (parent)"
+    
+    Activity ||--o{ Notification : "triggers"
+    
+    User {
+        int id PK
+        string username UK "unique, max 50 chars"
+        string email UK "unique, valid email"
+        string password_hash "hashed password"
+        string bio "max 500 chars, nullable"
+        string avatar_url "nullable"
+        string location "nullable"
+        boolean email_verified "default false"
+        int following_count "denormalized, default 0"
+        int followers_count "denormalized, default 0"
+        datetime date_joined "auto"
+        datetime last_login "nullable"
+    }
+
+    Follow {
+        int id PK
+        int follower_id FK "user who follows"
+        int following_id FK "user being followed"
+        datetime created_at "auto"
+        boolean notifications_enabled "default true"
+    }
+
+    Post {
+        int id PK
+        int user_id FK
+        string post_type "enum: track, playlist"
+        text caption "max 2000 chars, nullable"
+        string visibility "enum: public, followers, private"
+        datetime created_at "auto"
+        datetime updated_at "auto"
+    }
+
+    TrackPost {
+        int post_id PK_FK "1:1 with Post"
+        int track_id FK
+        string where_to_buy_url "nullable, max 500 chars"
+    }
+
+    PlaylistPost {
+        int post_id PK_FK "1:1 with Post"
+        int playlist_id FK
+    }
+
+    Playlist {
+        int id PK
+        int owner_id FK "user who created"
+        string name "max 200 chars"
+        text description "nullable"
+        string visibility "enum: public, followers, private"
+        string cover_image_url "nullable"
+        datetime created_at "auto"
+        datetime updated_at "auto"
+    }
+
+    PlaylistCollaborator {
+        int id PK
+        int user_id FK
+        int playlist_id FK
+        string role "enum: owner, editor, viewer"
+        datetime date_added "auto"
+        int invited_by_id FK "nullable, references User"
+    }
+
+    Track {
+        int id PK
+        string title "max 300 chars"
+        string artist_name "max 300 chars"
+        string album_name "max 300 chars, nullable"
+        int duration_seconds "nullable"
+        int release_year "nullable"
+        string image_url "nullable"
+        int created_by_id FK "first user who added"
+        datetime created_at "auto"
+    }
+
+    PlaylistTrack {
+        int id PK
+        int playlist_id FK
+        int track_id FK
+        int position "order in playlist"
+        int added_by_id FK "user who added"
+        datetime added_at "auto"
+    }
+
+    StreamingLink {
+        int id PK
+        int track_id FK
+        string platform "enum: spotify, apple_music, youtube, soundcloud, bandcamp, tidal, beatport"
+        string url UK "unique URL"
+        int added_by_id FK
+        datetime created_at "auto"
+    }
+
+    Tag {
+        int id PK
+        string name UK "unique, max 50 chars"
+        string tag_type "enum: genre, mood, custom"
+        int usage_count "denormalized, default 0"
+        datetime created_at "auto"
+    }
+
+    PlaylistTag {
+        int id PK
+        int playlist_id FK
+        int tag_id FK
+        int created_by_id FK
+        datetime created_at "auto"
+    }
+
+    TrackTag {
+        int id PK
+        int track_id FK
+        int tag_id FK
+        int created_by_id FK
+        datetime created_at "auto"
+    }
+
+    Like {
+        int id PK
+        int user_id FK
+        int post_id FK "only posts can be liked"
+        datetime created_at "auto"
+    }
+
+    Comment {
+        int id PK
+        int post_id FK
+        int user_id FK
+        text content "max 500 chars"
+        int parent_comment_id FK "nullable, for nested replies"
+        datetime created_at "auto"
+        datetime updated_at "auto"
+        boolean is_deleted "soft delete, default false"
+    }
+
+    Activity {
+        int id PK
+        int actor_id FK "user who performed action"
+        string verb "enum: posted, liked, commented, followed, created_playlist, added_track, shared_playlist"
+        string target_type "enum: Post, Comment, Playlist, User, Track"
+        int target_id "polymorphic reference"
+        datetime created_at "auto"
+    }
+
+    Notification {
+        int id PK
+        int recipient_id FK "user receiving notification"
+        int activity_id FK
+        string notification_type "enum: like, comment, follow, mention, playlist_invite, collaboration"
+        boolean is_read "default false"
+        datetime read_at "nullable"
+        datetime created_at "auto"
+    }

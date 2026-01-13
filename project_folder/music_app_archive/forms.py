@@ -36,11 +36,7 @@ class CreatePlaylist(ModelForm):
 
 class AddStreamingLink(forms.Form):
     '''
-    Form for the API
-    Don't think it needs to be a ModelForm as it's not updating anything
-
-    #TODO:
-        - Add validator on the URL that it refers to one of the streaming platforms
+    Form for the API.
     '''
     TRACK_TYPE = (
         ('track', 'Track'),
@@ -50,6 +46,7 @@ class AddStreamingLink(forms.Form):
 
     PLATFORM_CHOICES = [
         ('youtube', 'YouTube'),
+        ('youtube_music', 'YouTube Music'),
         ('bandcamp', 'Bandcamp'),
     ]
 
@@ -63,7 +60,7 @@ class AddStreamingLink(forms.Form):
         
         if not platform:
             raise forms.ValidationError(
-                "URL must be from YouTube, Spotify, SoundCloud, Bandcamp, or Nina"
+                "URL must be from YouTube or Bandcamp"
             )
         return url
 

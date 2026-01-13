@@ -106,4 +106,4 @@ dependencies:
     - google-api-python-client
     - beautifulsoup4==4.14.2
     #uncomment when creating the environment the first time locally
-    # - psycopg2==2.9.10
+    - psycopg2==2.9.10

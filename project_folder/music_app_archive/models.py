@@ -207,7 +207,7 @@ class StreamingLink(models.Model):
         platform_domains = {
             'youtube': ['youtube.com'],
             'youtube_music': ['music.youtube.com'],
-            'soundcloud': ['soundcloud.com'],
+            'bandcamp': ['bandcamp.com'],
         }
 
         domain_list = platform_domains.get(self.streaming_platform, [])

@@ -74,7 +74,7 @@ class OneTimeTokenTest(TestCase):
         #Generate one_time_token
         one_time_token = generate_one_time_token(user.id, OneTimeToken.Purpose.AUTH)
         
-        self.assertEqual(one_time_token.user_id, 1)
+        self.assertEqual(one_time_token.user_id, user.id)
         self.assertEqual(one_time_token.purpose, 'AUTH')
         self.assertNotEqual(one_time_token.purpose, 'AUTHENTICATE')
         self.assertIsNotNone(one_time_token.token)

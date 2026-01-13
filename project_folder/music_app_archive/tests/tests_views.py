@@ -334,7 +334,7 @@ class AddLinkToTrackTest(BaseTestCase):
         self.assertFalse(form.is_valid())
         #Test that the correct error message is raised
         self.assertIn(
-            "URL must be from YouTube, Spotify, SoundCloud, Bandcamp, or Nina",
+            "URL must be from YouTube or Bandcamp",
             form.errors["streaming_link"]
         )
 
