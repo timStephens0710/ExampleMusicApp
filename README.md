@@ -934,7 +934,10 @@ See [`music_app_frontend/README.md`](music_app_frontend/README.md) for detailed 
 python manage.py test
 
 # Docker
-docker-compose exec web python manage.py test
+docker compose up -d
+docker compose exec web python manage.py makemigrations
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py test --settings=music_app_main.settings_test
 
 # With coverage
 coverage run --source='.' manage.py test
