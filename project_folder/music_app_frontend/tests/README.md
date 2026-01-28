@@ -124,6 +124,94 @@ Tests URL parsing, hostname extraction, and platform validation.
 null or empty ✗
 ```
 
+### `validateAddTrackForm.test.ts`
+
+Tests form text validation for track metadata (artist, track name, album, etc.).
+
+**Unit Tests**:
+- `checkIsNull` - Mandatory field validation
+  - Non-empty text passes
+  - Empty/null text fails with error message
+
+- `checkLength250` - Maximum length validation
+  - Text under 250 characters passes
+  - Text over 250 characters fails with error message
+
+- `supportedStreamingPlatformIsSelected` - Platform dropdown validation
+  - Supported platforms (YouTube, etc.) pass
+  - Unsupported platforms fail
+
+**Orchestration Tests**:
+- `orchestrateCheckFormText` - Combined validation
+  - Valid text (not null, under 250 chars) passes
+  - Null text fails with appropriate message
+  - Overly long text fails with appropriate message
+
+**Key Test Scenarios**:
+```typescript
+// Valid inputs
+'hello world' ✓ (not null, under 250 chars)
+'YouTube' ✓ (supported platform)
+
+// Invalid inputs
+'' ✗ (empty field)
+'aZ9$kL2mQ#T7r@...[250+ chars]' ✗ (too long)
+'Soundcloud' ✗ (unsupported platform)
+```
+
+### `dynamicAddTrackForm.test.ts`
+
+Tests dynamic form behavior that adapts the UI based on track type selection (track vs. mix).
+
+**Form Initialization Tests**:
+- Element discovery and validation
+  - All required form elements found
+  - All optional container elements found
+  - Graceful handling of missing forms
+
+**Track Type: "track" Selected**:
+- Label updates to "Track Name"
+- Mix page container hidden
+- Album name container visible
+- Record label container visible
+- Purchase link container visible
+
+**Track Type: "mix" Selected**:
+- Label updates to "Mix Name"
+- Mix page container visible
+- Album name container hidden
+- Record label container hidden
+- Purchase link container hidden
+
+**Event Handling Tests**:
+- Form updates on track type change
+- Pre-filled values handled correctly (Django forms)
+- Real-time UI adaptation
+
+**MutationObserver Behavior**:
+- Detects when form is added to DOM
+- Stops observing after form is found
+- Handles asynchronous DOM injection
+
+**Edge Cases**:
+- Missing optional containers handled gracefully
+- Invalid track type values default to "mix" behavior
+- No errors thrown with incomplete DOM
+
+**Key Test Scenarios**:
+```typescript
+// Track type selection
+'track' → Show album fields, hide mix fields ✓
+'mix' → Show mix fields, hide album fields ✓
+
+// Label updates
+'track' → "Track Name" ✓
+'mix' → "Mix Name" ✓
+
+// DOM injection
+Form added after page load → Detected and initialized ✓
+```
+
 ## Test Structure
 
 All test files follow a consistent structure:
@@ -168,6 +256,7 @@ npm run test:coverage
 
 # Run specific test file
 npm test emailValidator.test.ts
+npm test dynamicAddTrackForm.test.ts
 ```
 
 ## Test Coverage
@@ -178,6 +267,7 @@ The test suite provides comprehensive coverage:
 - ✅ All exported validation functions
 - ✅ Orchestration/coordination functions
 - ✅ Edge case handling
+- ✅ Dynamic UI behavior
 
 ### Integration Coverage
 - ✅ DOM element selection
@@ -185,6 +275,8 @@ The test suite provides comprehensive coverage:
 - ✅ Form submission handling
 - ✅ Error message display
 - ✅ Error clearing on valid input
+- ✅ Dynamic form field visibility
+- ✅ MutationObserver patterns
 
 ### Edge Cases
 - ✅ Null/empty inputs
@@ -193,15 +285,25 @@ The test suite provides comprehensive coverage:
 - ✅ Special characters
 - ✅ Length boundaries
 - ✅ Invalid URL formats
+- ✅ Missing DOM elements
+- ✅ Asynchronous DOM injection
 
 ## Mocking and Test Utilities
 
 ### Vitest Utilities Used
 - `describe` - Test suite grouping
-- `it` - Individual test cases
+- `it`/`test` - Individual test cases
 - `expect` - Assertions
 - `beforeEach` - Setup before each test
+- `afterEach` - Cleanup after each test
 - `vi.spyOn` - Function call tracking (for `preventDefault`)
+- `vi.fn()` - Mock function creation
+- `vi.clearAllMocks()` - Mock cleanup
+
+### Testing Library Integration
+- `@testing-library/jest-dom/matchers` - Enhanced DOM assertions
+  - `toBeInTheDocument()` - Element presence
+  - Additional matchers for better readability
 
 ### DOM Mocking
 Tests use `document.body.innerHTML` to create mock DOM structures that mirror actual Django templates:
@@ -219,7 +321,7 @@ beforeEach(() => {
 ```
 
 ### Event Simulation
-Form submissions are simulated using native Event objects:
+Form submissions and changes are simulated using native Event objects:
 
 ```typescript
 const submitEvent = new Event('submit', { 
@@ -227,6 +329,27 @@ const submitEvent = new Event('submit', {
     cancelable: true 
 });
 form.dispatchEvent(submitEvent);
+
+// Select change events
+selectElement.dispatchEvent(new Event('change'));
+```
+
+### MutationObserver Testing
+Dynamic DOM changes are tested using MutationObserver:
+
+```typescript
+const observer = new MutationObserver((mutations, obs) => {
+    const form = document.getElementById('auth-form');
+    if (form) {
+        // Form detected
+        obs.disconnect();
+    }
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
 ```
 
 ## Test-Driven Development Workflow
@@ -255,24 +378,29 @@ it('validates soundcloud URLs', () => {
 
 ### Test Organization
 - Grouped by function/feature using `describe` blocks
-- Clear, descriptive test names using `it`
+- Clear, descriptive test names using `it`/`test`
 - Separated unit tests from integration tests
+- Logical test hierarchy (initialization → behavior → edge cases)
 
 ### Assertions
 - Single assertion focus per test (mostly)
 - Clear expected vs actual values
 - Meaningful error messages
+- Testing Library matchers for improved readability
 
 ### Test Independence
 - Each test is self-contained
 - No shared state between tests
 - `beforeEach` ensures clean slate
+- `afterEach` cleanup prevents side effects
 
 ### Comprehensive Coverage
 - Happy path (valid inputs)
 - Sad path (invalid inputs)
 - Edge cases (null, empty, whitespace)
 - Integration scenarios (real DOM interaction)
+- Asynchronous behavior (MutationObserver)
+- Error handling and graceful degradation
 
 ## Known Limitations
 
@@ -281,6 +409,7 @@ it('validates soundcloud URLs', () => {
 - Accessibility testing (ARIA attributes, screen readers)
 - Performance testing (validation speed)
 - Internationalization (error messages in multiple languages)
+- Real network requests (URL validation is local)
 
 ### Future Test Enhancements
 - Add visual regression tests for error display
@@ -290,6 +419,8 @@ it('validates soundcloud URLs', () => {
 - Add mutation testing to verify test quality
 - Test async validation scenarios
 - Add tests for network failures in URL parsing
+- Test keyboard navigation and focus management
+- Add tests for screen reader announcements
 
 ## Continuous Integration
 
@@ -309,6 +440,7 @@ These tests are designed to run in CI/CD pipelines:
 ### Running Single Test
 ```bash
 npm test -- emailValidator.test.ts
+npm test -- dynamicAddTrackForm.test.ts
 ```
 
 ### Verbose Output
@@ -319,6 +451,11 @@ npm test -- --reporter=verbose
 ### Debug Mode
 ```bash
 node --inspect-brk ./node_modules/vitest/vitest.mjs
+```
+
+### Watch Mode for Specific Test
+```bash
+npm test -- --watch dynamicAddTrackForm.test.ts
 ```
 
 ---

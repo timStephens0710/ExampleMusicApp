@@ -143,6 +143,7 @@ The source directory contains all TypeScript modules for client-side validation 
 
 ### UI Modules
 - **showPassword.ts** - Toggle password visibility
+- **dynamicAddTrackForm.ts** - Dynamically change addTrack form depending on track type
 
 ### Type Definitions
 - **musicAppAuth.ts** - Authentication form interfaces
