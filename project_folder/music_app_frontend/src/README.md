@@ -64,6 +64,20 @@ Provides toggle functionality for password field visibility.
 
 **Implementation**: Add a checkbox with class `show-password-toggle` to any form with password fields.
 
+#### `dynamicAddTrackForm.ts`
+Dynamically changes the addTrack form based on what the user selects for 'track type'
+
+**Features**:
+- If the user sets track type to 'track':
+    - 'Mix page' field of the form is hidden
+- If the user sets track type to 'mix':
+    - The following fields are hidden:
+        - album_name
+        - record_label
+        - purchase_link
+    - The 'Track name' field is changed to 'Mix Name'
+
+
 ### Music Content Management
 
 #### `musicAppPlaylist.ts`

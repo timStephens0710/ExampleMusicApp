@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 # 2026-01-13
 ### Added
+* dynamicAddTrackForm.ts with corresponding test module dynamicAddTrackForm.test.ts
+
+# 2026-01-13
+### Added
 * Installed TS
 * Installed vitest
 * Created src code TS modules

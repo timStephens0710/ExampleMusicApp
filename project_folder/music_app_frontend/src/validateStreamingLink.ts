@@ -37,6 +37,7 @@ export function checkStreamingLinkIsValid(hostName: string | null): null | strin
     //Pattern matches for subdomains
     const domainPatterns = [
         /\.bandcamp\.com$/, //Matches artist.bandcamp.com, label.bandcamp.com
+        //TODO: Add patterns for soundcloud, nina
     ];
 
     //Check exact matches

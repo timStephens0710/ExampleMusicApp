@@ -19,6 +19,7 @@ export default defineConfig({
         validateEmail: path.resolve(__dirname, './src/validateEmail.ts'),
         validatePassword: path.resolve(__dirname, './src/validatePassword.ts'),
         validateStreamingLink: path.resolve(__dirname, './src/validateStreamingLink.ts'),
+        dynamicAddTrackForm: path.resolve(__dirname, './src/dynamicAddTrackForm.ts'),
       },
       output: {
         entryFileNames: '[name].js',
