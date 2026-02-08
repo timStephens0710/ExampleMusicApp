@@ -49,6 +49,9 @@
                             {{ add_track_to_playlist_form.album_name|as_crispy_field }}
                     </div>
                     <div class="auth-form-input">
+                            {{ add_track_to_playlist_form.mix_page|as_crispy_field }}
+                    </div>
+                    <div class="auth-form-input">
                             {{ add_track_to_playlist_form.record_label|as_crispy_field }}
                     </div>
                     <div class="auth-form-input">
@@ -76,7 +79,6 @@
 <!-- end Track Form -->
 
 <script type="module" src=" {% static 'music_app/js/validateStreamingLink.js' %} "> </script>
-
-
+<script type="module" src=" {% static 'music_app/js/dynamicAddTrackForm.js' %} "> </script>
 
 {% endblock content %}

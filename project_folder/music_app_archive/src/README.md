@@ -239,7 +239,7 @@ See [`integrations/README.md`](./integrations/README.md) for detailed documentat
 
 **Quick Summary:**
 - **YouTube** - Official API integration
-- **Bandcamp** - Web scraping (JSON-LD)
+- **Bandcamp** - HTML scraping adopted Selenium to avoid Bandcamp blocking us
 - **Main Orchestrator** - Routes URLs to correct platform
 
 ---

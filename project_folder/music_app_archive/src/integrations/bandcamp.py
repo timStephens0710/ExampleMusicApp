@@ -1,6 +1,14 @@
-import requests
 from bs4 import BeautifulSoup
-import json
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException, WebDriverException
+import time
+import random
+import logging
+import os
 
 from ..custom_exceptions import BandCampMetaDataError
 from ..utils import orch_validate_input_string
@@ -11,96 +19,187 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def extract_jsonld_from_bandcamp(bandcamp_url: str)-> dict:
+def get_soup(bandcamp_url: str) -> BeautifulSoup:
     '''
-    Extract JSON-LD structured data from a Bandcamp url.
+    Fetch a Bandcamp page using Selenium and return a BeautifulSoup object.
+
+    This function:
+    - uses headless Chrome with realistic browser fingerprinting
+    - implements anti-detection measures
+    - waits for dynamic content to load
+    - adds random delays to mimic human behavior
+    - works in both local dev and Docker environments
     '''
+    driver = None
+    
     try:
-        #1. Fetch the page
-        response = requests.get(bandcamp_url, timeout=10)
-        response.raise_for_status()  # Raise error for bad status codes
+        #Configure Chrome options for stealth
+        chrome_options = Options()
         
-        # 2. Parse HTML with BeautifulSoup
-        soup = BeautifulSoup(response.content, 'html.parser')
+        #Headless mode
+        chrome_options.add_argument('--headless=new')
         
-        #3. Find the script tag with JSON-LD
-        # Look for: <script type="application/ld+json">
-        jsonld_script = soup.find('script', {'type': 'application/ld+json'})
+        #Essential arguments to avoid detection
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        if not jsonld_script:
-            logger.error("No JSON-LD script tag found")
-            raise BandCampMetaDataError(f"No JSON-LD script tag found")
+        #Realistic window size
+        chrome_options.add_argument('--window-size=1920,1080')
         
-        #4. Extract the text content from the script tag
-        jsonld_text = jsonld_script.string
+        #Set realistic user agent
+        chrome_options.add_argument(
+            'user-agent=Mozilla/5.0 (X11; Linux x86_64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/122.0.0.0 Safari/537.36'
+        )
         
-        #5. Parse the JSON string into a Python dictionary
-        jsonld_data = json.loads(jsonld_text)
+        #Additional privacy/security options
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--lang=en-GB')
         
-        return jsonld_data
-    except requests.RequestException as e:
-        logger.error(f"Error fetching URL {bandcamp_url}: {e}")
-        raise BandCampMetaDataError(f"Failed to fetch Bandcamp page: {str(e)}") from e
-    except json.JSONDecodeError as e:
-        logger.error(f"Error parsing JSON from {bandcamp_url}: {e}")
-        raise BandCampMetaDataError(f"Invalid JSON-LD format: {str(e)}") from e
-    except BandCampMetaDataError:
+        #Check if we should use remote Selenium (Docker) or local
+        selenium_url = os.getenv('SELENIUM_REMOTE_URL')
+        
+        if selenium_url:
+            #Running in Docker - use remote Selenium service
+            logger.info(f"Using remote Selenium at {selenium_url}")
+            driver = webdriver.Remote(
+                command_executor=selenium_url,
+                options=chrome_options
+            )
+        else:
+            #Running locally - use local Chrome
+            logger.info("Using local Chrome WebDriver")
+            from webdriver_manager.chrome import ChromeDriverManager
+            from selenium.webdriver.chrome.service import Service
+            
+            driver = webdriver.Chrome(
+                service=Service(ChromeDriverManager().install()),
+                options=chrome_options
+            )
+        
+        #Override navigator.webdriver flag (anti-detection)
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        #Add random delay before loading
+        time.sleep(random.uniform(1, 2))
+        
+        #Load the page
+        driver.get(bandcamp_url)
+        
+        #Wait for the page to load
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
+            #Additional wait for JavaScript to execute
+            time.sleep(random.uniform(2, 3))
+        except TimeoutException:
+            logger.warning(f"Timeout waiting for page load: {bandcamp_url}")
+        
+        #Scroll to simulate human behavior
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2);")
+        time.sleep(random.uniform(0.5, 1))
+        
+        #Get page source and parse with BeautifulSoup
+        page_source = driver.page_source
+        soup = BeautifulSoup(page_source, "html.parser")
+        
+        logger.info(f"Successfully fetched Bandcamp page: {bandcamp_url}")
+        return soup
+        
+    except TimeoutException as e:
+        logger.error(f"Timeout loading Bandcamp URL {bandcamp_url}: {e}")
+        raise
+    except WebDriverException as e:
+        logger.error(f"WebDriver error fetching Bandcamp URL {bandcamp_url}: {e}")
         raise
     except Exception as e:
-        logger.error(f"Unexpected error extracting JSON-LD from {bandcamp_url}: {e}")
-        raise BandCampMetaDataError(f"Unexpected error: {str(e)}") from e
-    
+        logger.error(f"Unexpected error fetching Bandcamp URL {bandcamp_url}: {e}")
+        raise
+    finally:
+        #Always close the browser
+        if driver:
+            driver.quit()
 
-def generate_bandcamp_meta_data_dictionary(jsonld_data: json, bandcamp_url: str) -> dict:
+def scrape_bandcamp_page(soup: BeautifulSoup) -> list:
     '''
+    Scrape bandcamp HTML to get the following:
+        - track_name
+        - artist_name
+        - album_name
     '''
-    #Validate bandcamp_url
-    orch_validate_input_string(bandcamp_url, 'bandcamp_url')
+    #Anchor to specific section in the HTML page
+    name_section = soup.find("div", id="name-section")
+    if not name_section:
+        raise BandCampMetaDataError("Could not find #name-section")
 
-    #Check jsonld_data
-    if not jsonld_data or not isinstance(jsonld_data, dict):
-        logger.error("generate_bandcamp_meta_data_dictionary: invalid jsonld_data for %s", bandcamp_url)
-        raise BandCampMetaDataError("No JSON-LD data provided")
+    #Get track_name
+    track_tag = name_section.find("h2", class_="trackTitle")
+    track_name = track_tag.get_text(strip=True) if track_tag else None
+
+    #Links inside the h3
+    h3 = name_section.find("h3")
+    links = h3.find_all("a") if h3 else []
+
+    #Initialise variables
+    album_name = None
+    artist_name = None
+
+    #Get album & artist names
+    if len(links) == 1:
+        #Only artist aka could be a single release
+        artist_name = links[0].get_text(strip=True)
+
+    elif len(links) >= 2:
+        raw_album_text = links[0].get_text(strip=True)
+        artist_name = links[1].get_text(strip=True)
+
+        if " - " in raw_album_text:
+            album_name = raw_album_text.split(" - ", 1)[1].strip()
+        else:
+            album_name = raw_album_text.strip()
     
-    #Generate bandcamp_meta_data_dict
+    bandcamp_page_information = [track_name, artist_name, album_name]
+    return bandcamp_page_information
+
+
+def orchestrate_bandcamp_meta_data_dictionary(bandcamp_url: str) -> dict:
+    '''
+    The following function is the orchestration module to generate the meta_data_dictionary for 
+    Bandcamp links.
+
+    Order of operations:
+        - It gets the soup object
+        - Scrapes the BandCamp HTML to get the meta data
+        - Generate the meta data dictionary
+    '''
     try:
+        #Get Bandcamp Soup object
+        bandcamp_soup = get_soup(bandcamp_url)
+
+        #Scrape BandCamp page to get song information
+        bandcamp_page_information = scrape_bandcamp_page(bandcamp_soup)
+
+        #Generate bandcamp_meta_data_dict
         bandcamp_meta_data_dict = {
         'track_type': "track" ,
-        'track_name': jsonld_data.get('name', 'Uknown track'),
-        'artist': jsonld_data.get('byArtist', {}).get('name', 'Uknown artist'),
-        'album_name': jsonld_data.get('inAlbum', {}).get('name'),
+        'track_name': bandcamp_page_information[0],
+        'artist': bandcamp_page_information[1],
+        'album_name': bandcamp_page_information[2],
         'purchase_link': bandcamp_url,
         'mix_page': "",
         'record_label': "",
         'genre': "",           
         'streaming_platform': "bandcamp",
         'streaming_link': bandcamp_url,
-
         }
-        logger.info(f"Successfully extracted Bandcamp metadata from: {bandcamp_url}")
-        return bandcamp_meta_data_dict
-    except Exception as e:
-        logger.error(f"Failed to generate metadata dictionary for {bandcamp_url}: {str(e)}")
-        raise BandCampMetaDataError(f"Failed to generate metadata: {str(e)}") from e
-
-def orchestrate_bandcamp_meta_data_dictionary(bandcamp_url: str) -> dict:
-    '''
-    High-level orchestrator: validate input, extract JSON-LD, normalize dict.
-    Raises BandcampMetadataError on failure.
-    '''
-    orch_validate_input_string(bandcamp_url, "bandcamp_url")
-
-    try:
-        jsonld_data = extract_jsonld_from_bandcamp(bandcamp_url)
-        if not jsonld_data:
-            logger.error("orchestrate_bandcamp_meta_data_dictionary: no JSON-LD for %s", bandcamp_url)
-            raise BandCampMetaDataError("No structured JSON-LD metadata found on the page")
-
-        bandcamp_meta_data_dict = generate_bandcamp_meta_data_dictionary(jsonld_data, bandcamp_url)
         return bandcamp_meta_data_dict
     except BandCampMetaDataError:
         raise
     except Exception as e:
         logger.error(f"Unexpected error orchestrating Bandcamp metadata for {bandcamp_url}: {e}")
         raise BandCampMetaDataError(f"Failed to extract Bandcamp metadata: {str(e)}") from e
-

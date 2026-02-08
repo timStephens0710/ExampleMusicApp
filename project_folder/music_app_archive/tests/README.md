@@ -4,7 +4,7 @@ This README provides an outline of the testing process, its importance, and guid
 ## What is Covered
 
 * Django tests:
-    * There a total of 49 unit tests related to testing the functionalities in django
+    * There a total of 83 unit tests related to testing the functionalities in django
     * Test modules: 
         * test_integrations
         * test_models

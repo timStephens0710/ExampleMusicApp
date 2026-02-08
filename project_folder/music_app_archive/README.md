@@ -231,7 +231,7 @@ Central integration function that:
 |----------|--------|--------|-----------------|
 | YouTube | Implemented | Official API | Yes |
 | YouTube Music | Implemented | Official API | Yes |
-| Bandcamp | Implemented | Web scraping | No |
+| Bandcamp | Implemented | HTML scraping | No |
 
 ---
 
@@ -425,8 +425,8 @@ Templates referenced in the views:
 ```bash
 # External API integrations
 google-api-python-client>=2.70.0  # YouTube Data API
-requests>=2.28.0                   # HTTP requests
-beautifulsoup4>=4.11.0            # Web scraping (Bandcamp)
+requests==2.32.3                  # HTTP requests
+beautifulsoup4==4.14.2            # Web scraping (Bandcamp)
 
 ```
 
@@ -439,16 +439,6 @@ conda activate music_app
 ```
 
 ---
-
-## Environment Variables
-
-Configure the following in your `.env` file or Django settings:
-
-```python
-# YouTube Data API
-YOUTUBE_API_KEY = 'your_youtube_api_key_here'
-
-```
 
 ### Getting API Keys
 
@@ -527,14 +517,13 @@ tests/
 
 ### High Priority
 - **Implement Typescript** - dramatically improve the front-end
+- **SoundCloud integration** - Add SoundCloud API support
 - **Fix get_playlist_tracks bug** - currently doesn't work as intended when called in the view
 - **UI for removing tracks** - Add delete functionality in playlist view
 - **Track reordering** - Drag-and-drop to update position
 - **Duplicate prevention** - Pre-check before DB save
-- **Bandcamp robustness** - More resilient scraping logic
 
 ### Medium Priority
-- **SoundCloud integration** - Add SoundCloud API support
 - **Pagination** - For playlists with 100+ tracks
 - **Search functionality** - Search within playlists
 - **Playlist sharing** - Share playlists with other users
