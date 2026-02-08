@@ -2,7 +2,7 @@
 
 A Django-based web application for managing music playlists with automatic metadata extraction from streaming platforms. The app provides secure user authentication, playlist creation/management, and integration with external music platforms (YouTube, Bandcamp, etc.) to automatically fetch track information.
 
-**Please note**  the music_app_auth & music_app_archive are **currently POC**. The main reason for this project is to learn TypeScript. I'm now prioritising the implementation of TypeScript. Also as a **POC** everything is run locally. I will also add a docker file in the next iteration.
+**Please note**  the music_app_auth & music_app_archive are **currently POC**. The main reason for this project is to learn TypeScript as well as further my understanding of Back-end Web Development. I'm now prioritising the implementation of TypeScript. Also as a **POC** everything is run locally. I will also add a docker file in the next iteration.
 
 ---
 
