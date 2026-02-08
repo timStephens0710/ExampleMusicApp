@@ -11,6 +11,7 @@ logger.setLevel(logging.INFO)
 
 def orchestrate_platform_api(streaming_url: str, track_type: str) -> dict:
     '''
+    #TODO soundcloud next
     '''
     #Validate inputs
     orch_validate_input_string(streaming_url, 'streaming_url')
