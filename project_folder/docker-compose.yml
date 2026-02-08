@@ -19,6 +19,18 @@ services:
       timeout: 5s
       retries: 5
 
+  selenium:
+    container_name: selenium_chrome
+    image: selenium/standalone-chromium:latest
+    restart: always
+    shm_size: 725mb
+    ports:
+      - "4444:4444"
+      - "7900:7900"  #VNC port for debugging
+    environment:
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=300
+
   web:
     container_name: django_web
     build: 
@@ -38,8 +50,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      selenium:
+        condition: service_started
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/music_app_db
+      - SELENIUM_REMOTE_URL=http://selenium:4444
 
 volumes:
   postgres_data:
