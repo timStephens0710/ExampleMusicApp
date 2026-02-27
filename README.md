@@ -1,8 +1,8 @@
 # Music App
 
-A Django-based web application for managing music playlists with automatic metadata extraction from streaming platforms. The app provides secure user authentication, playlist creation/management, and integration with external music platforms (YouTube, Bandcamp, etc.) to automatically fetch track information.
+A Django-based web application for managing music playlists with automatic metadata extraction from streaming platforms. The app provides secure user authentication, playlist creation/management, and integration with external music platforms (YouTube, Bandcamp, etc.) to automatically fetch track information. The project also includes a **data analytics layer** built on Snowflake, dbt, and Airflow to transform and analyse music listening data.
 
-**Please note**  the music_app_auth & music_app_archive are **currently POC**. The main reason for this project is to learn TypeScript as well as further my understanding of Back-end Web Development. I'm now prioritising the implementation of TypeScript. Also as a **POC** everything is run locally. I will also add a docker file in the next iteration.
+**Please note**  the music_app_auth & music_app_archive are **currently POC**. The main reason for this project is to learn TypeScript as well as further my understanding of Back-end Web Development. As well as learning TypeScript and the modern data stack (Airflow, dbt and Snowflake)
 
 ---
 
@@ -23,6 +23,7 @@ A Django-based web application for managing music playlists with automatic metad
 - [Testing](#testing)
 - [Technology Stack](#technology-stack)
 - [API Integrations](#api-integrations)
+- [Data Analytics Layer](#data-analytics-layer)
 - [Development Roadmap](#development-roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -38,7 +39,7 @@ A Django-based web application for managing music playlists with automatic metad
 - Organize tracks by type (tracks, mixes, samples)
 - Share playlists publicly or keep them private
 
-The application consists of three main Django modules and a TypeScript frontend workspace, each serving a distinct purpose in the system architecture.
+The application consists of three main Django modules, a TypeScript frontend workspace, and a data analytics layer built on Snowflake, dbt, and Airflow — each serving a distinct purpose in the system architecture.
 
 ---
 
@@ -86,7 +87,7 @@ The application consists of three main Django modules and a TypeScript frontend 
 
 ## Project Architecture
 
-The application follows Django's multi-app architecture with clear separation of concerns:
+The application follows Django's multi-app architecture with clear separation of concerns, extended by a modern data analytics stack:
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -108,19 +109,34 @@ The application follows Django's multi-app architecture with clear separation of
 │ - Login/Logout       │ │ - Streaming links │ │   (Selenium)      │
 │ - Password reset     │ │ - Metadata fetch  │ │ - SoundCloud      │
 │ - Token management   │ │ - Query optimize  │ │                   │
-└──────────────────────┘ └───────────────────┘ └───────────────────┘
-            │
-            │
-┌───────────▼──────────┐
-│ music_app_frontend   │
-│ (TypeScript/Vite)    │
-│                      │
-│ - Form validation    │
-│ - Client-side logic  │
-│ - Password toggles   │
-│ - Type definitions   │
-│ - Vitest test suite  │
-└──────────────────────┘
+└──────────────────────┘ └────────┬──────────┘ └───────────────────┘
+            │                     │
+            │                     │
+┌───────────▼──────────┐          │
+│ music_app_frontend   │          │
+│ (TypeScript/Vite)    │          │
+│                      │          │
+│ - Form validation    │          │
+│ - Client-side logic  │          │
+│ - Password toggles   │          │
+│ - Type definitions   │          │
+│ - Vitest test suite  │          │
+└──────────────────────┘          │
+                                  │ (source data)
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Data Analytics Layer                        │
+│                                                                 │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
+│  │    Airflow       │  │      dbt         │  │   Snowflake   │  │
+│  │  (Orchestration) │  │ (Transformation) │  │  (Warehouse)  │  │
+│  │                  │  │                  │  │               │  │
+│  │  - DAG scheduling│→ │  - RAW → STAGING │→ │  - RAW        │  │
+│  │  - Pipeline runs │  │  - STAGING→MARTS │  │  - STAGING    │  │
+│  │  - Monitoring    │  │  - Data quality  │  │  - MARTS      │  │
+│  │                  │  │    tests         │  │               │  │
+│  └──────────────────┘  └──────────────────┘  └───────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Docker Architecture
@@ -474,6 +490,16 @@ music_app/
 │   ├── vite.config.ts           # Vite configuration
 │   ├── tsconfig.json            # TypeScript configuration
 │   └── package.json             # NPM dependencies
+│
+├── dbt/                         # Data analytics layer
+│   ├── models/
+│   │   ├── staging/             # Cleaned & standardised source data
+│   │   └── marts/               # Business-ready analytical models
+│   ├── tests/                   # dbt data quality tests
+│   ├── macros/                  # Reusable SQL macros
+│   ├── seeds/                   # Static reference data
+│   ├── snapshots/               # Slowly changing dimension tracking
+│   └── dbt_project.yml          # dbt project configuration
 │
 ├── static/                      # Static files (CSS, JS, images)
 ├── staticfiles/                 # Collected static files (production)
@@ -1015,6 +1041,11 @@ print(metadata)
 
 ## Technology Stack
 
+### Data Analytics
+- **Snowflake** - Cloud data warehouse (RAW / STAGING / MARTS schemas)
+- **dbt Cloud** - SQL-based data transformation and modelling
+- **Apache Airflow** - Pipeline orchestration (planned)
+
 ### Backend
 - **Django 4.2.20** - Web framework
 - **Python 3.11.9** - Programming language
@@ -1137,6 +1168,102 @@ See [`music_app_archive/src/integrations/README.md`](music_app_archive/src/integ
 
 ---
 
+## Data Analytics Layer
+
+The data analytics layer extends the Music App into a full modern data stack, enabling analysis of music listening behaviour, playlist trends, and track metadata at scale.
+
+### Architecture
+
+Data flows from the Django/PostgreSQL application through a three-layer Snowflake data warehouse, orchestrated by Airflow and transformed by dbt:
+
+```
+Django App (PostgreSQL)
+        │
+        │ (Airflow extracts & loads)
+        ▼
+┌───────────────────────────────────────────────┐
+│              Snowflake (MUSIC_APP_DB)         │
+│                                               │
+│  RAW          →   STAGING      →   MARTS      │
+│  Raw source       Cleaned &        Business-  │
+│  data as-is       standardised     ready      │
+│                   models          analytics   │
+└───────────────────────────────────────────────┘
+        ▲
+        │ (dbt transforms)
+```
+
+### Snowflake Setup
+
+The warehouse is configured with a dedicated role and cost-efficient compute:
+
+| Resource | Name | Notes |
+|---|---|---|
+| Database | `MUSIC_APP_DB` | Main analytics database |
+| Warehouse | `MUSIC_APP_WH` | X-Small, auto-suspends after 60s |
+| Role | `MUSIC_APP_ROLE` | Dedicated least-privilege role |
+| Schemas | `RAW`, `STAGING`, `MARTS` | Medallion architecture |
+
+### dbt Project Structure
+
+dbt handles all transformations from RAW through to business-ready mart models:
+
+```
+dbt/
+├── models/
+│   ├── staging/            # stg_* models: clean & standardise raw data
+│   │   ├── stg_tracks.sql
+│   │   ├── stg_playlists.sql
+│   │   └── stg_streaming_links.sql
+│   └── marts/              # Business-ready analytical models
+│       ├── most_posted_artists.sql
+│       ├── playlist_growth.sql
+│       └── platform_breakdown.sql
+├── tests/                  # Data quality tests (not_null, unique, etc.)
+├── macros/                 # Reusable SQL macros
+└── dbt_project.yml         # Project configuration
+```
+
+### Medallion Architecture
+
+**RAW** — Data lands here exactly as it comes from the source. Never modified, acts as the single source of truth.
+
+**STAGING** — dbt cleans and standardises the raw data: renaming columns to snake_case, casting data types, deduplicating records, and applying basic business logic.
+
+**MARTS** — Final analytical models that answer business questions, e.g. most posted to artists/genres, playlist growth over time, breakdown by streaming platform.
+
+### Data Quality
+
+dbt's built-in testing framework is used to ensure data integrity across all models:
+
+```yaml
+# Example tests on stg_tracks
+- not_null: [track_id, track_name, artist]
+- unique: [track_id]
+- accepted_values: [platform, ['youtube', 'bandcamp', 'soundcloud']]
+```
+
+### Orchestration (Planned — Airflow)
+
+Apache Airflow will orchestrate the end-to-end pipeline on a schedule:
+
+```
+DAG: music_app_pipeline
+│
+├── extract_from_postgres    # Pull data from Django DB
+├── load_to_snowflake_raw    # Land in RAW schema
+└── trigger_dbt_run          # Run dbt transformations
+```
+
+### Development Environment
+
+dbt Cloud is connected to:
+- **Snowflake** via the `MUSIC_APP_ROLE` and `MUSIC_APP_WH`
+- **GitHub** repo (`/dbt` subdirectory) for version-controlled models
+- **Development schema** `dbt_tstephens` for personal sandbox development
+
+---
+
 ## Development Roadmap
 
 ### Phase 1: Core Features ✅
@@ -1156,13 +1283,25 @@ See [`music_app_archive/src/integrations/README.md`](music_app_archive/src/integ
 - [x] Fix Bandcamp API
 - [ ] Improve YouTube API
 - [ ] If song link exists, pull metadata from table
-- [ ] SoundCloud integration
+- [ ] SoundCloud API integration
 - [ ] Implement TypeScript to show relevent fields for Soundcloud mix
 - [ ] Track reordering (drag-and-drop)
 - [ ] Track deletion from playlists
 - [ ] Playlist search functionality
 - [ ] User profile customization
 - [ ] Real-time validation improvements
+
+### Phase 3: Data Analytics Layer (In Progress) 🔄
+- [x] Snowflake account setup (database, schemas, warehouse, role)
+- [x] dbt Cloud connected to Snowflake and GitHub
+- [x] dbt project initialised with medallion architecture (RAW / STAGING / MARTS)
+- [ ] Load source data from Django PostgreSQL into Snowflake RAW
+- [ ] Build staging models (stg_tracks, stg_playlists, stg_streaming_links)
+- [ ] Build mart models
+- [ ] Add dbt data quality tests (not_null, unique, accepted_values)
+- [ ] Add dbt model documentation
+- [ ] Set up Apache Airflow for pipeline orchestration
+- [ ] Build Airflow DAG to extract → load → transform on a schedule
 
 
 ---
