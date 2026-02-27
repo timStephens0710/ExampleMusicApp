@@ -1240,7 +1240,7 @@ dbt's built-in testing framework is used to ensure data integrity across all mod
 # Example tests on stg_tracks
 - not_null: [track_id, track_name, artist]
 - unique: [track_id]
-- accepted_values: [platform, ['youtube', 'bandcamp', 'soundcloud']]
+- accepted_values: [platform, ['youtube', 'youtube_music', 'bandcamp']]
 ```
 
 ### Orchestration (Planned — Airflow)
