@@ -120,3 +120,8 @@ __azurite_db_blob_extent__.json
 __blobstorage__/022057cb-b003-4287-bc21-4f058b071f6f
 __azurite_db_queue__.json
 __azurite_db_queue_extent__.json
+
+# Env files
+.env
+.env.*
+!.env.example
