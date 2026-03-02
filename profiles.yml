@@ -1,0 +1,18 @@
+user:
+  outputs:
+    default:
+      account: npndwvi-hs03281
+      auth_type: password
+      client_session_keep_alive: false
+      connect_retries: 3
+      connect_timeout: 30
+      database: MUSIC_APP_DB
+      password: Lord$teve0408387543
+      retry_on_database_errors: true
+      role: MUSIC_APP_ROLE
+      schema: dbt_tstephens
+      threads: 6
+      type: snowflake
+      user: timothystephens0710
+      warehouse: MUSIC_APP_WH
+  target: default
