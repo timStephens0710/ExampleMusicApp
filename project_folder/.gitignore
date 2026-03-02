@@ -125,3 +125,6 @@ __azurite_db_queue_extent__.json
 .env
 .env.*
 !.env.example
+
+# dbt
+profiles.yml
