@@ -8,4 +8,4 @@
 
 SELECT id,
        email
-FROM {{ source('raw', 'users')}}
+FROM {{ source('raw', 'users')}} --customuser

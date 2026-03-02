@@ -8,4 +8,4 @@
 
 SELECT id,
        streaming_platform
-FROM {{ source('raw', 'streaming_links')}}
+FROM {{ source('raw', 'streaming_links')}} --streaminglink

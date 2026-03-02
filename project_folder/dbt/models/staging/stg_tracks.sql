@@ -9,4 +9,4 @@
 SELECT id,
        track_type,
        purchase_link
-FROM {{ source('raw', 'tracks')}}
+FROM {{ source('raw', 'tracks')}} --track

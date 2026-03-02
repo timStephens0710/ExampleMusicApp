@@ -10,4 +10,4 @@
 SELECT id,
        playlist_type,
        is_private
-FROM {{ source('raw', 'playlists')}}
+FROM {{ source('raw', 'playlists')}} --playlist
