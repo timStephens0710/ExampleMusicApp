@@ -23,3 +23,8 @@ models:
       marts:
           +materialized: table #Physically store this in Snowflake
           +schema: MARTS
+
+#seeds
+seeds:
+  music_app:
+      +schema: RAW
