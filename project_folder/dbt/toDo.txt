@@ -36,7 +36,7 @@ Minimal Set You Need For Credibility
 Airflow Timing:
     Phase 1 — dbt (now)
     → Load sample data into RAW
-    → Build staging + mart models
+    → Build mart models
     → Add tests and documentation
 
     Phase 2 — Airflow (after dbt is working)
