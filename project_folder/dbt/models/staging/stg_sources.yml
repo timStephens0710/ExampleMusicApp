@@ -1,0 +1,13 @@
+version: 2
+
+#This is like writing SELECT * FROM <<table_name>> from postgreSQL
+
+sources:
+    - name: raw
+      database: MUSIC_APP_DB
+      schema: RAW
+      tables:
+        - name: music_app_archive_playlist
+        - name: music_app_archive_streaminglink
+        - name: music_app_archive_track
+        - name: music_app_auth_customuser

@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_playlists
+    description: "Staging model for Playlists RAW"
+    columns:
+        - name: id
+          description: "The primary key for the playlists table"
+          tests:
+            - unique
+            - not_null
+
+  - name: stg_streaming_links
+    description: "Staging model for StreamingLinks RAW"
+    columns:
+        - name: id
+          description: "The primary key for the StreamingLinks table"
+          tests:
+            - unique
+            - not_null
+
+  - name: stg_tracks
+    description: "Staging model for Tracks"
+    columns:
+        - name: id
+          description: "The primary key for the tracks table"
+          tests:
+            - unique
+            - not_null
+
+  - name: stg_users
+    description: "Staging model for CustomUsers"
+    columns:
+        - name: id
+          description: "The primary key for the CustomUser table"
+          tests:
+            - unique
+            - not_null

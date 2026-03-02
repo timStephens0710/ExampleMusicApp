@@ -4,6 +4,7 @@
   "description": "Music App Frontend - TypeScript with Vite",
   "type": "module",
   "scripts": {
+    "dev": "vite",
     "build": "vite build",
     "build:watch": "vite build --watch",
     "test": "vitest"
