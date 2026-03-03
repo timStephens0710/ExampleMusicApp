@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: mart_playlist_type
+    description: "Mart model for displaying breakdown by Playlist Type"
+    columns:
+        - name: playlist_type
+          description: Type of playlists
+          tests:
+            - unique
+            - not_null
+        - name: total_count
+          description: Count of the playlists types
+          tests:
+            - not_null
+
+  - name: mart_playlist_visibility
+    description: "Mart model for displaying breakdown by Playlist Visibility"
+    columns:
+        - name: playlist_visibility
+          description: Visibility of playlists
+          tests:
+            - unique
+            - not_null
+        - name: total_count
+          description: Count of the playlists visibility selections
+          tests:
+            - not_null
+
+  - name: mart_streaming_links
+    description: "Mart model for displaying breakdown by streaming platform"
+    columns:
+        - name: streaming_platform
+          description: Streaming Platform
+          tests:
+            - unique
+            - not_null
+        - name: total_count
+          description: Count of the streaming platforms
+          tests:
+            - not_null
+
+  - name: mart_summary_stats
+    description: "Mart model for the following summary stats: total users, total playlists and total tracks"
+    columns:
+        - name: summary_metric
+          description: Details what the specific summary metrics is
+          tests:
+            - not_null
+        - name: total_count
+          description: Count for each specific metric
+          tests:
+            - not_null
+
+  - name: mart_track_purchase_link
+    description: "Mart model for understanding how many tracks have been shared with a purchase link."
+    columns:
+        - name: total_tracks
+          description: Total tracks posted
+          tests:
+            - not_null
+        - name: total_with_purchase_link
+          description: Total tracks posted with a purchase link
+          tests:
+            - not_null
+        - name: purchase_track_ratio
+          description: The ratio of tracks that have a purchase link against the total tracks posted
+          tests:
+            - not_null
+
+  - name: mart_track_type
+    description: "Mart model for understanding the break down of track types posted"
+    config: 
+      materialized: table
+    columns:
+        - name: track_type
+          description: Track type 
+          tests:
+            - unique
+            - not_null
+        - name: total_count
+          description: Count for each track type 
+          tests:
+            - not_null
