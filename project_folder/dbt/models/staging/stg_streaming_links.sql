@@ -7,5 +7,6 @@
 */
 
 SELECT id,
-       streaming_platform
+       streaming_platform,
+       created_at
 FROM {{ source('raw', 'streaming_links')}} --streaminglink
