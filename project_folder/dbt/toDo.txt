@@ -28,7 +28,7 @@ Minimal Set You Need For Credibility
             - breakdown track type
             - analyses of purchase links:
                 - Will be good to see how many users are attaching purchase links to their tracks in the playlists.
-        - incremental model (done)
+        - incremental model (I need to think on this some more)
         - Basic tests (done)
         - Sources defined (done)
         - Documentation generated
