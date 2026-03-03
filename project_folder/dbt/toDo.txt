@@ -10,14 +10,14 @@ dataAnalyticsModels workflow:
 Minimal Set You Need For Credibility
     - For your project, you only need:
         - staging models
-            - Auth_models:
+            - Auth_models: (done)
                 - Users
-            - Archive_models:
+            - Archive_models: (done)
                 - Playlist:
                 - StreamingLink:
                 - Track
-        - mart models
-            - aggregation:
+        - mart models (done)
+            - aggregation: 
                 - total_users
                 - total_playlists
                 - total tracks
@@ -28,14 +28,14 @@ Minimal Set You Need For Credibility
             - breakdown track type
             - analyses of purchase links:
                 - Will be good to see how many users are attaching purchase links to their tracks in the playlists.
-        - incremental model
-        - Basic tests
-        - Sources defined
+        - incremental model (done)
+        - Basic tests (done)
+        - Sources defined (done)
         - Documentation generated
         
 Airflow Timing:
     Phase 1 — dbt (now)
-    → Load sample data into RAW
+    → Load sample data into RAW (done)
     → Build mart models
     → Add tests and documentation
 
