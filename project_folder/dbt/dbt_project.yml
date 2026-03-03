@@ -1,4 +1,3 @@
-
 name: 'music_app'
 version: '1.0.0'
 config-version: 2
@@ -24,3 +23,8 @@ models:
       marts:
           +materialized: table #Physically store this in Snowflake
           +schema: MARTS
+
+#seeds
+seeds:
+  music_app:
+      +schema: RAW
