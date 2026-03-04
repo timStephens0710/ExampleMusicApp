@@ -67,12 +67,16 @@ dbt/
 │   │   ├── stg_playlists.sql
 │   │   ├── stg_streaming_links.sql
 │   │   ├── stg_users.sql
-│   │   └── _staging.yml            # Staging model documentation & tests
-│   └── marts/                      # Business-ready analytical models
-│       ├── most_played_artists.sql
-│       ├── playlist_growth.sql
-│       ├── platform_breakdown.sql
-│       └── _marts.yml              # Mart model documentation & tests
+│   │   ├── stg_sources.yml               # Raw data postgreSQL data sources
+│   │   └── _staging.yml                  # Staging model documentation & tests
+│   └── marts/                            # Business-ready analytical models
+│       ├── mart_playlist_type.sql         
+│       ├── mart_playlist_visibility.sql.  
+│       ├── mart_streaming_links.sql      
+│       ├── mart_summary_stats.sql        
+│       ├── mart_track_purchase_link.sql  
+│       ├── mart_track_type.sql           
+│       └── mart_schema.yml               # Mart model documentation & tests
 ├── tests/                          # Custom singular tests
 ├── macros/                         # Reusable SQL macros
 ├── seeds/                          # Static reference data (CSV)
@@ -97,10 +101,10 @@ Staging models clean and standardise the raw source data. Each model maps 1:1 to
 
 | Model | Source Table | Description |
 |---|---|---|
-| `stg_tracks` | `RAW.tracks` | Music tracks with metadata (title, artist, album) |
+| `stg_tracks` | `RAW.tracks` | Music tracks with metadata (track type, purchase link) |
 | `stg_playlists` | `RAW.playlists` | User playlists with privacy settings |
 | `stg_streaming_links` | `RAW.streaming_links` | Platform URLs linked to tracks |
-| `stg_users` | `RAW.users` | App users (anonymised where necessary) |
+| `stg_users` | `RAW.users` | App users, email and is_active  |
 
 ### Marts
 
@@ -108,9 +112,13 @@ Mart models join and aggregate staging models to produce business-ready outputs.
 
 | Model | Description |
 |---|---|
-| `most_posted_artists` | Artist frequency ranked by number of tracks saved |
-| `playlist_growth` | Playlist creation and track addition over time |
-| `platform_breakdown` | Track counts broken down by streaming platform |
+| `mart_playlist_type` | Showing the breakdown of playlist type |
+| `mart_playlist_visibility` | Showing the breakdown of playlists visibility |
+| `mart_streaming_links` | Showing the breakdown by streaming platform |
+| `mart_summary_stats` | Showing total users, playlists and tracks |
+| `mart_track_purchase_link` | AShowing ratio of songs shared that have a purchase link |
+| `mart_track_type` | Showing breakdown by track type |
+
 
 ---
 
@@ -260,10 +268,10 @@ refactor/<model-name>        # Refactoring existing models
 - [x] Snowflake warehouse and schema setup
 - [x] dbt Cloud connected to Snowflake and GitHub
 - [x] dbt project initialised
-- [ ] Load source data into `RAW` schema via Airflow
-- [ ] Build staging models (tracks, playlists, streaming links, users)
-- [ ] Build mart models (most played artists, playlist growth, platform breakdown)
-- [ ] Add data quality tests to all models
+- [x] Load seed data into `RAW` schema via Airflow
+- [x] Build staging models (tracks, playlists, streaming links, users)
+- [x] Build mart models (most played artists, playlist growth, platform breakdown)
+- [x] Add data quality tests to all models
 - [ ] Add dbt model documentation and column descriptions
 - [ ] Configure dbt Cloud production job
 - [ ] Wire up Airflow DAG to trigger dbt runs on schedule
