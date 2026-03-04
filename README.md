@@ -1211,17 +1211,27 @@ dbt handles all transformations from RAW through to business-ready mart models:
 ```
 dbt/
 ├── models/
-│   ├── staging/            # stg_* models: clean & standardise raw data
+│   ├── staging/                    # One model per source table
 │   │   ├── stg_tracks.sql
 │   │   ├── stg_playlists.sql
-│   │   └── stg_streaming_links.sql
-│   └── marts/              # Business-ready analytical models
-│       ├── most_posted_artists.sql
-│       ├── playlist_growth.sql
-│       └── platform_breakdown.sql
-├── tests/                  # Data quality tests (not_null, unique, etc.)
-├── macros/                 # Reusable SQL macros
-└── dbt_project.yml         # Project configuration
+│   │   ├── stg_streaming_links.sql
+│   │   ├── stg_users.sql
+│   │   ├── stg_sources.yml               # Raw data postgreSQL data sources
+│   │   └── _staging.yml                  # Staging model documentation & tests
+│   └── marts/                            # Business-ready analytical models
+│       ├── mart_playlist_type.sql         
+│       ├── mart_playlist_visibility.sql.  
+│       ├── mart_streaming_links.sql      
+│       ├── mart_summary_stats.sql        
+│       ├── mart_track_purchase_link.sql  
+│       ├── mart_track_type.sql           
+│       └── mart_schema.yml               # Mart model documentation & tests
+├── tests/                          # Custom singular tests
+├── macros/                         # Reusable SQL macros
+├── seeds/                          # Static reference data (CSV)
+├── snapshots/                      # Slowly changing dimension tracking
+├── dbt_project.yml                 # Project configuration
+└── README.md                       # Detailed README of the dbt folder
 ```
 
 ### Medallion Architecture
@@ -1230,7 +1240,7 @@ dbt/
 
 **STAGING** — dbt cleans and standardises the raw data: renaming columns to snake_case, casting data types, deduplicating records, and applying basic business logic.
 
-**MARTS** — Final analytical models that answer business questions, e.g. most posted to artists/genres, playlist growth over time, breakdown by streaming platform.
+**MARTS** — Final analytical models that answer business questions, e.g. how many users, playlists and tracks. As well as breakdowns of playlists and tracks.
 
 ### Data Quality
 
@@ -1278,7 +1288,20 @@ dbt Cloud is connected to:
 - [x] Selenium Grid integration
 - [x] Anti-detection web scraping
 
-### Phase 2: Enhanced Features (In Progress) 🔄
+### Phase 2: Data Analytics Layer (In Progress) 🔄
+- [x] Snowflake account setup (database, schemas, warehouse, role)
+- [x] dbt Cloud connected to Snowflake and GitHub
+- [x] dbt project initialised with medallion architecture (RAW / STAGING / MARTS)
+- [x] Build staging models (stg_tracks, stg_playlists, stg_streaming_links)
+- [x] Build mart models
+- [x] Add dbt data quality tests (not_null, unique, accepted_values)
+- [x] Load seed data into Snowflake RAW and execture dbt run and dbt test
+- [ ] Load source data from Django PostgreSQL into Snowflake RAW
+- [ ] Add dbt model documentation
+- [ ] Set up Apache Airflow for pipeline orchestration
+- [ ] Build Airflow DAG to extract → load → transform on a schedule
+
+### Phase 3: Enhanced Features (In Progress) 🔄
 - [x] Update Python version
 - [x] Fix Bandcamp API
 - [ ] Improve YouTube API
@@ -1290,18 +1313,6 @@ dbt Cloud is connected to:
 - [ ] Playlist search functionality
 - [ ] User profile customization
 - [ ] Real-time validation improvements
-
-### Phase 3: Data Analytics Layer (In Progress) 🔄
-- [x] Snowflake account setup (database, schemas, warehouse, role)
-- [x] dbt Cloud connected to Snowflake and GitHub
-- [x] dbt project initialised with medallion architecture (RAW / STAGING / MARTS)
-- [ ] Load source data from Django PostgreSQL into Snowflake RAW
-- [ ] Build staging models (stg_tracks, stg_playlists, stg_streaming_links)
-- [ ] Build mart models
-- [ ] Add dbt data quality tests (not_null, unique, accepted_values)
-- [ ] Add dbt model documentation
-- [ ] Set up Apache Airflow for pipeline orchestration
-- [ ] Build Airflow DAG to extract → load → transform on a schedule
 
 
 ---
