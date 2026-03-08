@@ -6,6 +6,6 @@
 */
 
 SELECT id,
-       email,
+       username,
        is_active
 FROM {{ source('raw', 'users')}} --customuser
