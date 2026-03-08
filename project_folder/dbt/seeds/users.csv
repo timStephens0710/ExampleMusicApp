@@ -1,2 +1,2 @@
 id,password,last_login,is_superuser,is_staff,is_active,date_joined,email,username,email_verified
-1,pbkdf2_sha256$600000$gXleW6qYwtTwdBy832hq2w$PPIH+15+gTfp8FIMOGGgMZa6S/LjKZMq44p8BqbZ15M= ,2026-03-02 10:45:14.42724+0,0,0,1,2026-02-28 13:22:01.85086+00,test1@user.com,test1,1
+1,pbkdf2_sha256$600000$gXleW6qYwtTwdBy832hq2w$PPIH+15+gTfp8FIMOGGgMZa6S/LjKZMq44p8BqbZ15M= ,2026-03-02 10:45:14.42724+0,0,0,t,2026-02-28 13:22:01.85086+00,test1@user.com,test1,t
