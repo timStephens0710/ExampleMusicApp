@@ -185,7 +185,7 @@ with DAG(
     dag_id='music_app_pipeline',                    # Unique identifier - shown in Airflow UI
     description='Extracts data from PostgreSQL, loads into Snowflake RAW, triggers dbt run',
     schedule_interval=None,                          # None = manual trigger only
-    start_date=datetime(2026, 1, 1),                # Historical start date - required by Airflow
+    start_date=datetime(2026, 3, 9),                # Historical start date - required by Airflow
     catchup=False,                                   # Don't backfill historical runs
     tags=['music_app', 'etl', 'snowflake', 'dbt'],  # Tags for filtering in the UI
 ) as dag:
