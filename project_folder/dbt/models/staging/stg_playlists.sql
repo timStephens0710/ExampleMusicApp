@@ -9,5 +9,6 @@
 
 SELECT id,
        playlist_type,
-       is_private
-FROM {{ source('raw', 'playlists')}} --playlist
+       is_private,
+       is_deleted
+FROM {{ source('raw', 'playlist')}} 

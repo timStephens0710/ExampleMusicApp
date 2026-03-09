@@ -8,4 +8,4 @@
 SELECT id,
        username,
        is_active
-FROM {{ source('raw', 'users')}} --customuser
+FROM {{ source('raw', 'customuser')}}
