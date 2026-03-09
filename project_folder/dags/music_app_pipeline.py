@@ -112,7 +112,7 @@ def load_to_snowflake_raw(**context):
 
         # Build CREATE TABLE IF NOT EXISTS statement
         # All columns created as VARCHAR for simplicity - dbt handles type casting in staging
-        column_definitions = ', '.join([f'"{col}" VARCHAR' for col in columns])
+        column_definitions = ', '.join([f'{col} VARCHAR' for col in columns])
         create_sql = f"""
             CREATE TABLE IF NOT EXISTS {table_name} (
                 {column_definitions}
