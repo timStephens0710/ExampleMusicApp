@@ -168,7 +168,7 @@ def _trigger_dbt_job(job_type: str) -> None:
     }
 
     # Trigger the dbt Cloud job
-    trigger_url = f'https://cloud.getdbt.com/api/v2/accounts/{account_id}/jobs/{job_id}/run/'
+    trigger_url = f'https://uh837.us1.dbt.com/api/v2/accounts/{account_id}/jobs/{job_id}/run/'
     logging.info(f"Triggering dbt {job_type} — POST {trigger_url}")
 
     response = requests.post(
@@ -195,7 +195,7 @@ def _trigger_dbt_job(job_type: str) -> None:
     logging.info(f"dbt {job_type} triggered successfully — run ID: {run_id}")
 
     # Poll the API every 10 seconds until the job finishes
-    status_url = f'https://cloud.getdbt.com/api/v2/accounts/{account_id}/runs/{run_id}/'
+    status_url = f'https://uh837.us1.dbt.com/api/v2/accounts/{account_id}/runs/{run_id}/'
     logging.info(f"Polling run status at: {status_url}")
 
     poll_count = 0
