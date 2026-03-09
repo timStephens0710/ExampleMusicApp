@@ -8,7 +8,7 @@ WITH CTE_TOTAL_USERS AS (
     SELECT 'Total Users' AS summary_metric
             ,COUNT(*) AS total_count
     FROM {{ ref('stg_users') }}
-    WHERE is_active = 1
+    WHERE is_active = TRUE
 )
 , CTE_TOTAL_PLAYLISTS AS (
     SELECT 'Total Playlists' AS summary_metric

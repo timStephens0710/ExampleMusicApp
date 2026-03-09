@@ -4,10 +4,15 @@
 
 */
 WITH CTE_PLAYLIST_VISIBILITY AS (
-    SELECT CASE WHEN is_private = 1 THEN 'Private'
+    SELECT
+        id,
+        is_private,
+        CASE
+            WHEN is_private = 'private' THEN 'Private'
             ELSE 'Public'
-            END AS playlist_visibility
-FROM {{ ref('stg_playlists') }}
+        END AS playlist_visibility
+    FROM {{ ref('stg_playlists') }}
+    WHERE is_deleted = FALSE
 )
 
 SELECT playlist_visibility, COUNT(*) AS total_count
