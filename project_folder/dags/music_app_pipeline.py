@@ -2,8 +2,12 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from airflow.hooks.base import BaseHook
+from airflow.models import Variable
 from datetime import datetime
 import logging
+import requests
+import time
 
 # ──────────────────────────────────────────
 # DAG CONFIGURATION
@@ -133,48 +137,93 @@ def load_to_snowflake_raw(**context):
     logging.info("Load to Snowflake RAW complete")
 
 
+def _trigger_dbt_job(job_type: str) -> None:
+    """
+    Shared helper function used by both trigger_dbt_run and trigger_dbt_test.
+
+    - Retrieves the API token securely from Airflow connections (dbt_cloud)
+    - Retrieves account ID and job ID from Airflow variables
+    - Triggers the dbt Cloud job via the API
+    - Polls every 10 seconds until the job completes
+    - Raises an exception if the job fails so Airflow marks the task as failed
+
+    Args:
+        job_type: Label used in log messages e.g. 'run' or 'test'
+    """
+    # Retrieve API token from Airflow connections — never hardcoded in code
+    dbt_conn = BaseHook.get_connection('dbt_cloud')
+    api_token = dbt_conn.password
+
+    # Retrieve account and job IDs from Airflow variables
+    account_id = Variable.get('DBT_ACCOUNT_ID')
+    job_id = Variable.get('DBT_JOB_ID')
+
+    headers = {
+        'Authorization': f'Token {api_token}',
+        'Content-Type': 'application/json'
+    }
+
+    # Trigger the dbt Cloud job
+    trigger_url = f'https://cloud.getdbt.com/api/v2/accounts/{account_id}/jobs/{job_id}/run/'
+    logging.info(f"Triggering dbt {job_type} — POST {trigger_url}")
+
+    response = requests.post(
+        trigger_url,
+        headers=headers,
+        json={'cause': f'Triggered by Airflow — dbt {job_type}'}
+    )
+    response.raise_for_status()
+
+    run_id = response.json()['data']['id']
+    logging.info(f"dbt {job_type} triggered — run ID: {run_id}")
+
+    # Poll the API every 10 seconds until the job finishes
+    status_url = f'https://cloud.getdbt.com/api/v2/accounts/{account_id}/runs/{run_id}/'
+
+    while True:
+        time.sleep(10)
+        status_response = requests.get(status_url, headers=headers)
+        status_response.raise_for_status()
+
+        run_data = status_response.json()['data']
+        status = run_data['status']
+        status_message = run_data.get('status_humanized', status)
+
+        logging.info(f"dbt {job_type} status: {status_message}")
+
+        # dbt Cloud status codes:
+        # 1 = Queued, 2 = Starting, 3 = Running, 10 = Success, 20 = Error, 30 = Cancelled
+        if status == 10:
+            logging.info(f"dbt {job_type} completed successfully")
+            break
+        elif status in [20, 30]:
+            raise Exception(f"dbt {job_type} failed with status: {status_message}. Check dbt Cloud for details.")
+
+
 def trigger_dbt_run(**context):
     """
-    Task 3: Trigger dbt to transform RAW → STAGING → MARTS
+    Task 3: Trigger dbt run to transform RAW → STAGING → MARTS
 
-    - This task uses the dbt Cloud API to trigger a job run
-    - dbt handles all transformations from RAW through to your mart models
-    - In a local dbt Core setup this would run the dbt CLI directly
-
-    Note: For now this task logs a placeholder message.
-    Once your dbt Cloud job is configured, replace this with the API call.
+    - Calls the shared _trigger_dbt_job helper
+    - Triggers the dbt Cloud job and waits for completion
+    - Fails the Airflow task if dbt run fails
     """
-    logging.info("Triggering dbt run")
-    logging.info("dbt transformation: RAW → STAGING → MARTS")
-
-    # ── Placeholder for dbt Cloud API trigger ──
-    # When ready, configure a dbt Cloud job and add your account ID,
-    # job ID and API key to trigger it via the dbt Cloud API here.
-    # 
-    # Example:
-    # import requests
-    # response = requests.post(
-    #     f"https://cloud.getdbt.com/api/v2/accounts/{ACCOUNT_ID}/jobs/{JOB_ID}/run/",
-    #     headers={"Authorization": f"Token {DBT_API_KEY}"},
-    #     json={"cause": "Triggered by Airflow"}
-    # )
-    
-    logging.info("dbt run triggered successfully")
+    logging.info("Starting dbt run — RAW → STAGING → MARTS")
+    _trigger_dbt_job(job_type='run')
+    logging.info("dbt run completed successfully")
 
 
 def trigger_dbt_test(**context):
     """
-    Task 4: Trigger dbt to run the tests
+    Task 4: Trigger dbt test to validate data quality
 
-    - This task uses the dbt Cloud API to trigger a job run
-    - dbt handles all transformations from RAW through to your mart models
-    - In a local dbt Core setup this would run the dbt CLI directly
-
-    Note: For now this task logs a placeholder message.
-    Once your dbt Cloud job is configured, replace this with the API call.
+    - Calls the shared _trigger_dbt_job helper
+    - Only runs if Task 3 (dbt run) succeeded
+    - Fails the Airflow task if any dbt tests fail
     """
-    logging.info("Triggering dbt test")    
-    logging.info("dbt test triggered successfully")
+    logging.info("Starting dbt test — validating data quality across all models")
+    _trigger_dbt_job(job_type='test')
+    logging.info("dbt test completed successfully — all data quality checks passed")
 
 
 # ──────────────────────────────────────────
