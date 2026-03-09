@@ -5,7 +5,7 @@
         - mart_summary_stats.sql
 */
 
-SELECT id,
-       username,
-       is_active
+SELECT "id",
+       "username",
+       "is_active"
 FROM {{ source('raw', 'music_app_auth_customuser')}}

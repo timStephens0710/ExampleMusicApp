@@ -4,9 +4,9 @@
 WITH CTE_TRACKS AS (
     SELECT 
         COUNT(*) AS total_tracks,
-        COUNT(CASE WHEN purchase_link IS NOT NULL THEN 1 END) AS total_with_purchase_link
+        COUNT(CASE WHEN "purchase_link" IS NOT NULL THEN 1 END) AS total_with_purchase_link
     FROM {{ ref('stg_tracks') }}
-    WHERE track_type = 'track'
+    WHERE "track_type" = 'track'
 )
 
 SELECT 

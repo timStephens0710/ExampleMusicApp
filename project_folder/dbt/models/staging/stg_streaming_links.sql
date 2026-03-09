@@ -6,7 +6,7 @@
         - mart_summary_stats.sql
 */
 
-SELECT id,
-       streaming_platform,
-       created_at
+SELECT "id",
+       "streaming_platform",
+       "created_at"
 FROM {{ source('raw', 'music_app_archive_streaminglink')}}

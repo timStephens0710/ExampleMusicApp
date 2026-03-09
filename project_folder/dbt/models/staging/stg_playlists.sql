@@ -7,8 +7,8 @@
         - mart_breakdown_is_private
 */
 
-SELECT id,
-       playlist_type,
-       is_private,
-       is_deleted
+SELECT "id",
+       "playlist_type",
+       "is_private",
+       "is_deleted"
 FROM {{ source('raw', 'music_app_archive_playlist')}} 
