@@ -7,7 +7,7 @@ sources:
       database: MUSIC_APP_DB
       schema: RAW
       tables:
-        - name: playlists #music_app_archive_playlist
-        - name: streaming_links #music_app_archive_streaminglink
-        - name: tracks #music_app_archive_track
-        - name: users #music_app_auth_customuser
+        - name: music_app_archive_playlist
+        - name: music_app_archive_streaminglink
+        - name: music_app_archive_track
+        - name: music_app_auth_customuser

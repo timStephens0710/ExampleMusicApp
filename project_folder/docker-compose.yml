@@ -1,4 +1,32 @@
+version: '3.8'
+
+x-airflow-common:
+  # Common configuration shared across all Airflow services
+  # This avoids repeating the same config for webserver and scheduler
+  &airflow-common
+  image: apache/airflow:2.8.1
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor                                               # Lightweight executor suitable for local development
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow  # Airflow metadata DB connection
+    AIRFLOW__CORE__FERNET_KEY: ''                                                        # Encryption key for sensitive data (leave empty for dev)
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'                                  # New DAGs start paused - you manually trigger them
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'                                                # Disable example DAGs to keep UI clean
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'                  # Basic auth for API access
+    _PIP_ADDITIONAL_REQUIREMENTS: "requests apache-airflow-providers-snowflake"
+  volumes:
+    - ./dags:/opt/airflow/dags                                                           # Your DAG files
+    - airflow_logs:/opt/airflow/logs                                                     # Airflow task logs
+  depends_on:
+    airflow_db:
+      condition: service_healthy
+
 services:
+
+  # ──────────────────────────────────────────
+  # EXISTING SERVICES
+  # ──────────────────────────────────────────
+
   db:
     container_name: postgres_db
     image: postgres:16
@@ -26,20 +54,20 @@ services:
     shm_size: 725mb
     ports:
       - "4444:4444"
-      - "7900:7900"  #VNC port for debugging
+      - "7900:7900"                                                                      # VNC port for debugging
     environment:
       - SE_NODE_MAX_SESSIONS=5
       - SE_NODE_SESSION_TIMEOUT=300
 
   web:
     container_name: django_web
-    build: 
+    build:
       context: .
       target: backend-dev
     restart: always
     command: >
       bash -c "python manage.py migrate
-      && python manage.py runserver 0.0.0.0:8000" 
+      && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/project_folder
       - static_volume:/project_folder/staticfiles
@@ -56,6 +84,81 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/music_app_db
       - SELENIUM_REMOTE_URL=http://selenium:4444
 
+  # ──────────────────────────────────────────
+  # AIRFLOW SERVICES
+  # ──────────────────────────────────────────
+
+  airflow_db:
+    # Separate PostgreSQL instance for Airflow metadata
+    # Kept isolated from your Django db to avoid any conflicts
+    container_name: airflow_db
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_DB=airflow
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow_init:
+    # One-time initialisation service that:
+    # 1. Sets up the Airflow metadata database
+    # 2. Creates the admin user for the UI
+    # Exits after completion - this is expected behaviour
+    <<: *airflow-common
+    container_name: airflow_init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db init &&
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Tim \
+          --lastname Stephens \
+          --role Admin \
+          --email timothystephens0710@gmail.com
+    environment:
+      <<: *airflow-common-env
+    restart: on-failure
+
+  airflow_webserver:
+    # The Airflow UI - accessible at http://localhost:8080
+    # Login with admin/admin (set in airflow_init above)
+    <<: *airflow-common
+    container_name: airflow_webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      airflow_db:
+        condition: service_healthy
+      airflow_init:
+        condition: service_completed_successfully
+
+  airflow_scheduler:
+    # Runs silently in the background
+    # Monitors your DAGs and triggers tasks on schedule
+    <<: *airflow-common
+    container_name: airflow_scheduler
+    command: scheduler
+    restart: always
+    depends_on:
+      airflow_db:
+        condition: service_healthy
+      airflow_init:
+        condition: service_completed_successfully
+
 volumes:
   postgres_data:
   static_volume:
+  airflow_db_data:                                                                       # Airflow metadata database storage
+  airflow_logs:                                                                          # Airflow task execution logs

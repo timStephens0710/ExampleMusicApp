@@ -1,2 +1,2 @@
 id,playlist_name,slug,playlist_type,description,date_created,date_updated,is_private,is_deleted,owner_id
-1,testTunes,testtunes,tracks,yo,2026-02-28 13:29:36.211452+00,2026-02-28 13:29:36.211475+00,1,0,1
+1,testTunes,testtunes,tracks,yo,2026-02-28 13:29:36.211452+00,2026-02-28 13:29:36.211475+00,private,f,1

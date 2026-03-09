@@ -27,7 +27,7 @@ models:
           tests:
             - not_null
 
-  - name: mart_streaming_links
+  - name: mart_steaming_links
     description: "Mart model for displaying breakdown by streaming platform"
     columns:
         - name: streaming_platform
