@@ -112,7 +112,7 @@ def load_to_snowflake_raw(**context):
 
         # Build CREATE TABLE IF NOT EXISTS statement
         # All columns created as VARCHAR for simplicity - dbt handles type casting in staging
-        column_definitions = ', '.join([f'{col} VARCHAR' for col in columns])
+        column_definitions = ', '.join([f'"{col}" VARCHAR' for col in columns])
         create_sql = f"""
             CREATE TABLE IF NOT EXISTS {table_name} (
                 {column_definitions}
@@ -158,6 +158,10 @@ def _trigger_dbt_job(job_type: str) -> None:
     account_id = Variable.get('DBT_ACCOUNT_ID')
     job_id = Variable.get('DBT_JOB_ID')
 
+    # Log config for debugging — never log the api_token itself
+    logging.info(f"dbt Cloud config — account_id: {account_id}, job_id: {job_id}")
+    logging.info(f"API token retrieved: {'YES' if api_token else 'NO — check dbt_cloud connection'}")
+
     headers = {
         'Authorization': f'Token {api_token}',
         'Content-Type': 'application/json'
@@ -172,32 +176,61 @@ def _trigger_dbt_job(job_type: str) -> None:
         headers=headers,
         json={'cause': f'Triggered by Airflow — dbt {job_type}'}
     )
-    response.raise_for_status()
+
+    # Log the full API response for debugging
+    logging.info(f"API response status code: {response.status_code}")
+    logging.info(f"API response body: {response.text}")
+
+    # Raise immediately if the API call itself failed (e.g. 401 unauthorised, 404 not found)
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        raise Exception(
+            f"dbt Cloud API call failed — status {response.status_code}. "
+            f"Check your API token, account ID and job ID are correct. "
+            f"Full error: {e}"
+        )
 
     run_id = response.json()['data']['id']
-    logging.info(f"dbt {job_type} triggered — run ID: {run_id}")
+    logging.info(f"dbt {job_type} triggered successfully — run ID: {run_id}")
 
     # Poll the API every 10 seconds until the job finishes
     status_url = f'https://cloud.getdbt.com/api/v2/accounts/{account_id}/runs/{run_id}/'
+    logging.info(f"Polling run status at: {status_url}")
 
+    poll_count = 0
     while True:
         time.sleep(10)
+        poll_count += 1
+
         status_response = requests.get(status_url, headers=headers)
-        status_response.raise_for_status()
+
+        # Log polling response for debugging
+        logging.info(f"Poll #{poll_count} — status code: {status_response.status_code}")
+
+        try:
+            status_response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            raise Exception(f"Failed to poll dbt run status — full error: {e}")
 
         run_data = status_response.json()['data']
         status = run_data['status']
         status_message = run_data.get('status_humanized', status)
 
-        logging.info(f"dbt {job_type} status: {status_message}")
+        logging.info(f"Poll #{poll_count} — dbt {job_type} status: {status_message} (code: {status})")
 
         # dbt Cloud status codes:
         # 1 = Queued, 2 = Starting, 3 = Running, 10 = Success, 20 = Error, 30 = Cancelled
         if status == 10:
-            logging.info(f"dbt {job_type} completed successfully")
+            logging.info(f"dbt {job_type} completed successfully after {poll_count} polls")
             break
         elif status in [20, 30]:
-            raise Exception(f"dbt {job_type} failed with status: {status_message}. Check dbt Cloud for details.")
+            # Log the full run data to help diagnose what failed
+            logging.error(f"dbt {job_type} failed — full run data: {run_data}")
+            raise Exception(
+                f"dbt {job_type} failed with status: {status_message} (code: {status}). "
+                f"Run ID: {run_id}. Check dbt Cloud Deploy → Runs for full error details."
+            )
 
 
 def trigger_dbt_run(**context):

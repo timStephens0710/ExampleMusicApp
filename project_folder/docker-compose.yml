@@ -123,7 +123,7 @@ services:
           --firstname Tim \
           --lastname Stephens \
           --role Admin \
-          --email timothystephens0710@email.com
+          --email timothystephens0710@gmail.com
     environment:
       <<: *airflow-common-env
     restart: on-failure
