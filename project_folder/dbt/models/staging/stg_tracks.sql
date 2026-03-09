@@ -10,4 +10,4 @@
 SELECT id,
        track_type,
        purchase_link
-FROM {{ source('raw', 'track')}}
+FROM {{ source('raw', 'music_app_archive_track')}}

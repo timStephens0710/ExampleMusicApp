@@ -8,4 +8,4 @@
 SELECT id,
        username,
        is_active
-FROM {{ source('raw', 'customuser')}}
+FROM {{ source('raw', 'music_app_auth_customuser')}}

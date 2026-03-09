@@ -11,4 +11,4 @@ SELECT id,
        playlist_type,
        is_private,
        is_deleted
-FROM {{ source('raw', 'playlist')}} 
+FROM {{ source('raw', 'music_app_archive_playlist')}} 
