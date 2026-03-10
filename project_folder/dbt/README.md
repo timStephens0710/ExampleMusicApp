@@ -178,6 +178,23 @@ The full Snowflake setup SQL is located in the root of the repository at `snowfl
 
 ---
 
+## Pipeline Orchestration
+
+dbt is responsible for transformation only — everything upstream is handled by Airflow.
+
+The Airflow DAG (`music_app_pipeline`) manages the full pipeline in sequence:
+1. Extracts data from the Django PostgreSQL database
+2. Loads it into the `RAW` schema in Snowflake
+3. Triggers this dbt project via the dbt Cloud API to run and test models
+
+dbt is **not** triggered by the dbt Cloud scheduler in production. The Airflow DAG owns the schedule and calls dbt Cloud as a downstream step, ensuring dbt only runs on fresh data.
+
+The DAG file and its documentation are located at:
+```
+airflow/dags/music_app_pipeline.py
+airflow/dags/README.md
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -272,9 +289,9 @@ refactor/<model-name>        # Refactoring existing models
 - [x] Build staging models (tracks, playlists, streaming links, users)
 - [x] Build mart models (most played artists, playlist growth, platform breakdown)
 - [x] Add data quality tests to all models
-- [ ] Add dbt model documentation and column descriptions
-- [ ] Configure dbt Cloud production job
-- [ ] Wire up Airflow DAG to trigger dbt runs on schedule
+- [x] Add dbt model documentation and column descriptions
+- [x] Configure dbt Cloud production job
+- [x] Wire up Airflow DAG to trigger dbt runs on schedule
 
 ---
 

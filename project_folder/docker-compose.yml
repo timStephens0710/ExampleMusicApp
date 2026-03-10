@@ -4,7 +4,9 @@ x-airflow-common:
   # Common configuration shared across all Airflow services
   # This avoids repeating the same config for webserver and scheduler
   &airflow-common
-  image: apache/airflow:2.8.1
+  build:
+    context: .
+    dockerfile: dockerfile.airflow  
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor                                               # Lightweight executor suitable for local development

@@ -7,7 +7,7 @@
         - mart_summary_stats
 */
 
-SELECT "id",
-       "track_type",
-       "purchase_link"
+SELECT "id"::INTEGER AS id,
+       "track_type"::VARCHAR AS track_type,
+       "purchase_link"::VARCHAR AS purchase_link
 FROM {{ source('raw', 'music_app_archive_track')}}

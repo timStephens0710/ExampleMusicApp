@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+# 2025-03-10
+### Added
+* Successfully built and integrated a data anlytics layer using:
+    * Airflow, dbt & Snowflake
+* dbt folder
+* dags folder
+* dockerfile.airflow
+
+### Changed
+* docker-compose.yml now includes Airflow integration
+
 # 2025-02-08
 ### Added
 * Selenium container
