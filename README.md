@@ -1,8 +1,8 @@
 # Music App
 
-A Django-based web application for managing music playlists with automatic metadata extraction from streaming platforms. The app provides secure user authentication, playlist creation/management, and integration with external music platforms (YouTube, Bandcamp, etc.) to automatically fetch track information. The project also includes a **data analytics layer** built on Snowflake, dbt, and Airflow to transform and analyse music listening data.
+A Django-based web application for archiving and managing music playlists, with automatic metadata extraction from streaming platforms including YouTube and Bandcamp. The app features secure email-based authentication, playlist and track management, and a Selenium-powered scraping layer for platforms without a public API.
 
-**Please note**  the music_app_auth & music_app_archive are **currently POC**. The main reason for this project is to learn TypeScript as well as further my understanding of Back-end Web Development. As well as learning TypeScript and the modern data stack (Airflow, dbt and Snowflake)
+The project is deliberately full-stack in scope, built to demonstrate practical experience across backend web development (Django, PostgreSQL), client-side validation (TypeScript, Vite), infrastructure (Docker, Selenium Grid), and a modern data analytics stack — with a Snowflake data warehouse, dbt transformation layer following medallion architecture, and an Airflow pipeline orchestrating the full extract → load → transform workflow.
 
 ---
 
@@ -490,6 +490,11 @@ music_app/
 │   ├── vite.config.ts           # Vite configuration
 │   ├── tsconfig.json            # TypeScript configuration
 │   └── package.json             # NPM dependencies
+│
+├── airflow/                         # Pipeline orchestration
+│   └── dags/
+│       ├── music_app_pipeline.py    # Main ETL DAG (extract → load → dbt run → dbt test)
+│       └── README.md                # DAG setup and connection guide
 │
 ├── dbt/                         # Data analytics layer
 │   ├── models/
@@ -1044,7 +1049,7 @@ print(metadata)
 ### Data Analytics
 - **Snowflake** - Cloud data warehouse (RAW / STAGING / MARTS schemas)
 - **dbt Cloud** - SQL-based data transformation and modelling
-- **Apache Airflow** - Pipeline orchestration (planned)
+- **Apache Airflow** - Pipeline orchestration (extract → load → dbt run → dbt test)
 
 ### Backend
 - **Django 4.2.20** - Web framework
@@ -1250,20 +1255,34 @@ dbt's built-in testing framework is used to ensure data integrity across all mod
 # Example tests on stg_tracks
 - not_null: [track_id, track_name, artist]
 - unique: [track_id]
-- accepted_values: [platform, ['youtube', 'youtube_music', 'bandcamp']]
 ```
 
-### Orchestration (Planned — Airflow)
+### Orchestration (Airflow)
 
-Apache Airflow will orchestrate the end-to-end pipeline on a schedule:
+Apache Airflow orchestrates the end-to-end pipeline via a manually triggered DAG. The DAG connects to dbt Cloud via API and polls until each job completes before proceeding.
 
 ```
 DAG: music_app_pipeline
 │
-├── extract_from_postgres    # Pull data from Django DB
-├── load_to_snowflake_raw    # Land in RAW schema
-└── trigger_dbt_run          # Run dbt transformations
+├── extract_from_postgres    # Pull data from Django PostgreSQL DB via XCom
+├── load_to_snowflake_raw    # Full refresh load into Snowflake RAW schema
+├── trigger_dbt_run          # RAW → STAGING → MARTS transformations
+└── trigger_dbt_test         # Data quality validation across all models
 ```
+
+Each task only runs if the previous one succeeds. The DAG is currently set to manual trigger (`schedule_interval=None`) — it can be switched to a cron schedule without any other changes.
+
+**Required Airflow setup** (Admin → Connections & Variables):
+
+| Type | Key | Purpose |
+|---|---|---|
+| Connection | `postgres_music_app` | Django PostgreSQL database |
+| Connection | `snowflake_music_app` | Snowflake data warehouse |
+| Connection | `dbt_cloud` | dbt Cloud API token (stored in `password` field) |
+| Variable | `DBT_ACCOUNT_ID` | dbt Cloud account ID |
+| Variable | `DBT_JOB_ID` | dbt Cloud job to trigger |
+
+See [`airflow/dags/README.md`](airflow/dags/README.md) for full setup instructions.
 
 ### Development Environment
 
@@ -1296,20 +1315,21 @@ dbt Cloud is connected to:
 - [x] Build mart models
 - [x] Add dbt data quality tests (not_null, unique, accepted_values)
 - [x] Load seed data into Snowflake RAW and execture dbt run and dbt test
-- [ ] Load source data from Django PostgreSQL into Snowflake RAW
-- [ ] Add dbt model documentation
-- [ ] Set up Apache Airflow for pipeline orchestration
-- [ ] Build Airflow DAG to extract → load → transform on a schedule
+- [x] Load source data from Django PostgreSQL into Snowflake RAW
+- [x] Add dbt model documentation
+- [x] Set up Apache Airflow for pipeline orchestration
+- [x] Build Airflow DAG to extract → load → transform on a schedule
 
 ### Phase 3: Enhanced Features (In Progress) 🔄
 - [x] Update Python version
 - [x] Fix Bandcamp API
+- [ ] Track deletion from playlists
+- [ ] Remove password, switch to auth tokens
 - [ ] Improve YouTube API
 - [ ] If song link exists, pull metadata from table
 - [ ] SoundCloud API integration
 - [ ] Implement TypeScript to show relevent fields for Soundcloud mix
 - [ ] Track reordering (drag-and-drop)
-- [ ] Track deletion from playlists
 - [ ] Playlist search functionality
 - [ ] User profile customization
 - [ ] Real-time validation improvements
@@ -1475,6 +1495,8 @@ We welcome contributions! Please follow these guidelines:
 - **Frontend Workspace:** [`music_app_frontend/README.md`](music_app_frontend/README.md)
 - **Services Layer:** [`music_app_archive/src/README.md`](music_app_archive/src/README.md)
 - **API Integrations:** [`music_app_archive/src/integrations/README.md`](music_app_archive/src/integrations/README.md)
+- **Airflow DAG:** [`airflow/dags/README.md`](airflow/dags/README.md)
+- **dbt Project:** [`dbt/README.md`](dbt/README.md)
 
 ---
 
@@ -1499,7 +1521,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Issues:** Open an issue on GitHub
 - **Discussions:** GitHub Discussions
-- **Email:** support@musicapp.example.com
 
 ---
 
