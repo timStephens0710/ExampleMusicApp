@@ -6,9 +6,9 @@
         - mart_breakdown_playlist_type
         - mart_breakdown_is_private
 */
-
-SELECT "id",
-       "playlist_type",
-       "is_private",
-       "is_deleted"
-FROM {{ source('raw', 'music_app_archive_playlist')}} 
+SELECT
+    "id"::INTEGER AS id,
+    "playlist_type"::VARCHAR AS playlist_type,
+    "is_private"::VARCHAR AS is_private,
+    "is_deleted"::BOOLEAN AS is_deleted
+FROM {{ source('raw', 'music_app_archive_playlist') }}
