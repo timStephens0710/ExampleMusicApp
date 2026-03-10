@@ -7,7 +7,7 @@ x-airflow-common:
   build:
     context: .
     dockerfile: dockerfile.airflow  
-    environment:
+  environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor                                               # Lightweight executor suitable for local development
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow  # Airflow metadata DB connection
