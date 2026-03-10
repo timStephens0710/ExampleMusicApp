@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
     * Airflow, dbt & Snowflake
 * dbt folder
 * dags folder
+* dockerfile.airflow
+
+### Changed
+* docker-compose.yml now includes Airflow integration
 
 # 2025-02-08
 ### Added
