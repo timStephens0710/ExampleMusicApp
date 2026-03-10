@@ -4,8 +4,10 @@ x-airflow-common:
   # Common configuration shared across all Airflow services
   # This avoids repeating the same config for webserver and scheduler
   &airflow-common
-  image: apache/airflow:2.8.1
-  environment:
+  build:
+    context: .
+    dockerfile: dockerfile.airflow  
+    environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor                                               # Lightweight executor suitable for local development
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow  # Airflow metadata DB connection
