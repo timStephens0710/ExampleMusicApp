@@ -9,6 +9,7 @@ import logging
 import requests
 import time
 
+
 # ──────────────────────────────────────────
 # DAG CONFIGURATION
 # ──────────────────────────────────────────
@@ -76,15 +77,16 @@ def load_to_snowflake_raw(**context):
     """
     Task 2: Load extracted data into Snowflake RAW schema
 
-    - Pulls the extracted data from XCom (passed from Task 1)
-    - Connects to Snowflake using the snowflake_music_app connection
-    - Creates the table in RAW if it doesn't exist
-    - Truncates and reloads the table on each run (full refresh)
-    - This is a simple approach suitable for small datasets
+    - Pulls extracted data from XCom (produced by extract_from_postgres)
+    - Connects to Snowflake using the configured Airflow connection
+    - Creates RAW tables if they do not exist
+    - Truncates and reloads the table on each DAG run (full refresh)
+    - All columns stored as VARCHAR in RAW layer
+    - Type casting and modelling handled downstream by dbt
     """
     logging.info("Starting load to Snowflake RAW")
 
-    # Pull the data that Task 1 pushed to XCom
+    # Pull extracted data from previous task
     extracted_data = context['ti'].xcom_pull(
         key='extracted_data',
         task_ids='extract_from_postgres'
@@ -93,47 +95,62 @@ def load_to_snowflake_raw(**context):
     if not extracted_data:
         raise ValueError("No data received from extract_from_postgres task")
 
-    # SnowflakeHook uses the connection we configured in the Airflow UI
+    # Connect to Snowflake using Airflow connection
     snowflake_hook = SnowflakeHook(snowflake_conn_id=SNOWFLAKE_CONN_ID)
     conn = snowflake_hook.get_conn()
     cursor = conn.cursor()
 
-    # Set the context for all subsequent SQL commands
-    cursor.execute("USE DATABASE MUSIC_APP_DB")
-    cursor.execute("USE SCHEMA RAW")
-    cursor.execute("USE WAREHOUSE MUSIC_APP_WH")
-    cursor.execute("USE ROLE MUSIC_APP_ROLE")
+    try:
+        # Set session context
+        cursor.execute("USE ROLE MUSIC_APP_ROLE")
+        cursor.execute("USE WAREHOUSE MUSIC_APP_WH")
+        cursor.execute("USE DATABASE MUSIC_APP_DB")
+        cursor.execute("USE SCHEMA RAW")
 
-    for table_name, data in extracted_data.items():
-        columns = data['columns']
-        rows = data['rows']
+        # Process each extracted table
+        for table_name, data in extracted_data.items():
 
-        logging.info(f"Loading {len(rows)} rows into RAW.{table_name}")
+            columns = data['columns']
+            rows = data['rows']
 
-        # Build CREATE TABLE IF NOT EXISTS statement
-        # All columns created as VARCHAR for simplicity - dbt handles type casting in staging
-        column_definitions = ', '.join([f'"{col}" VARCHAR' for col in columns])
-        create_sql = f"""
-            CREATE TABLE IF NOT EXISTS {table_name} (
-                {column_definitions}
-            )
-        """
-        cursor.execute(create_sql)
+            logging.info(f"Loading {len(rows)} rows into RAW.{table_name}")
 
-        # Truncate the table before reloading to avoid duplicates on re-runs
-        cursor.execute(f"TRUNCATE TABLE {table_name}")
+            # Build CREATE TABLE statement
+            column_definitions = ", ".join([f'"{col}" VARCHAR' for col in columns])
 
-        # Insert all rows
-        if rows:
-            placeholders = ', '.join(['%s'] * len(columns))
-            insert_sql = f"INSERT INTO {table_name} VALUES ({placeholders})"
-            cursor.executemany(insert_sql, rows)
+            create_sql = f"""
+                CREATE TABLE IF NOT EXISTS RAW."{table_name.upper()}" (
+                    {column_definitions}
+                )
+            """
 
-        logging.info(f"Successfully loaded {table_name} into Snowflake RAW")
+            cursor.execute(create_sql)
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+            # Truncate existing data
+            logging.info(f"Truncating RAW.{table_name}")
+            cursor.execute(f'TRUNCATE TABLE RAW."{table_name}"')
+
+            # Insert new rows
+            if rows:
+
+                column_list = ", ".join([f'"{col}"' for col in columns])
+                placeholders = ", ".join(["%s"] * len(columns))
+
+                insert_sql = f"""
+                    INSERT INTO RAW."{table_name.upper()}" ({column_list})
+                    VALUES ({placeholders})
+                """
+
+                cursor.executemany(insert_sql, rows)
+
+            logging.info(f"Successfully loaded RAW.{table_name}")
+
+        conn.commit()
+
+    finally:
+        cursor.close()
+        conn.close()
+
     logging.info("Load to Snowflake RAW complete")
 
 
