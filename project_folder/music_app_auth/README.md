@@ -314,7 +314,7 @@ coverage report
 
 - One-time tokens expire after use
 - Tokens are time-limited (configurable)
-- Passwords are hashed using Django's default hasher
+- Passwords are hashed using **Argon2**, the winner of the Password Hashing Competition and the most secure hashing algorithm available. Argon2 is specifically designed to resist brute-force attacks, GPU cracking, and other modern attack vectors by being intentionally slow and memory-intensive. This makes it computationally infeasible for attackers to crack passwords even if the database is compromised.
 - CSRF protection on all forms
 - Email verification required before login
 - Secure token generation using secrets module

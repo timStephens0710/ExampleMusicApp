@@ -278,7 +278,7 @@ Success
 - ✓ Tokens expire after single use
 - ✓ Time-limited tokens (configurable)
 - ✓ Email verification required
-- ✓ Password hashing (Django default)
+- ✓ Password hashing with Argon2
 - ✓ CSRF protection on all forms
 - ✓ Activity logging for auditing
 - ✓ Client-side validation (TypeScript)
@@ -1323,8 +1323,8 @@ dbt Cloud is connected to:
 ### Phase 3: Enhanced Features (In Progress) 🔄
 - [x] Update Python version
 - [x] Fix Bandcamp API
+- [x] Update password security with Argon 2
 - [ ] Track deletion from playlists
-- [ ] Remove password, switch to auth tokens
 - [ ] Improve YouTube API
 - [ ] If song link exists, pull metadata from table
 - [ ] SoundCloud API integration
