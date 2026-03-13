@@ -11,6 +11,7 @@ from music_app_auth.models import AppLogging
 from .forms import *
 from .src.integrations.main_integrations import orchestrate_platform_api
 from .src.custom_exceptions import BandCampMetaDataError, YouTubeMetaDataError
+from .src.utils import map_playlist_type_track_type
 
 from music_app_auth.models import CustomUser
 from music_app_auth.src.django_error_utils import handle_django_error
@@ -166,9 +167,6 @@ def add_streaming_link_to_playlist(request, username, playlist_name):
     #Get relevant user_id
     user_id = user.id
 
-    #Initialise forms
-    add_streaming_link_to_playlist_form = AddStreamingLink()
-
     #Verify playlist exists and belongs to user
     try:
         playlist = Playlist.objects.get(playlist_name=playlist_name, owner=user, is_deleted=False)
@@ -176,6 +174,17 @@ def add_streaming_link_to_playlist(request, username, playlist_name):
         logger.warning(f"Playlist '{playlist_name}' not found for user {username}")
         messages.error(request, f"Playlist '{playlist_name}' not found")
         return redirect('user_playlists', username=username)
+    
+
+    #Map playlist_type to track_type
+    mapped_track_type = map_playlist_type_track_type(playlist.playlist_type)
+
+    #Initialise forms
+    add_streaming_link_to_playlist_form = AddStreamingLink(
+        initial={
+            'track_type': mapped_track_type
+        }
+    )
 
     #AddStreamingLink() form
     if request.method== 'POST':
@@ -257,7 +266,11 @@ def add_streaming_link_to_playlist(request, username, playlist_name):
             return render(request, 'add_link.html', context)
     
     #Generate empty form
-    add_streaming_link_to_playlist_form = AddStreamingLink()
+    add_streaming_link_to_playlist_form = AddStreamingLink(
+        initial={
+            'track_type': mapped_track_type
+        }
+    )
     context = {
         'username': username,
         'playlist_name': playlist_name,

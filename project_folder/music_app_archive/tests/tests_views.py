@@ -23,14 +23,14 @@ class BaseTestCase(TestCase):
         self.test_playlist = Playlist.objects.create(
             playlist_name = 'test_playlist',
             owner = self.user_1,
-            playlist_type = 'track',
+            playlist_type = 'tracks',
             is_private = 'public'
         )
 
         self.wip_playlist = Playlist.objects.create(
             playlist_name = 'WIP playlist',
             owner = self.user_1,
-            playlist_type = 'track',
+            playlist_type = 'tracks',
             is_private = 'private'
         )
 
@@ -122,10 +122,9 @@ class AddTrackToPlaylistTest(BaseTestCase):
     Track is successfully added + correct redirection.
 
     this is handy for debugging: print(f"Response content: {response.content.decode()}")
-
-    #TODO fix up this test once I've got Bandcamp added to my API's.
     '''
     def setUp(self):        
+        self.playlist_type = 'tracks'
         self.track_type = 'track'
         self.track_name = 'Another Life'
         self.artist = 'Horse Vision'
@@ -134,80 +133,6 @@ class AddTrackToPlaylistTest(BaseTestCase):
         self.purchase_link = 'https://horsevision.bandcamp.com/album/another-life'
         self.streaming_platform = 'bandcamp'
 
-
-    # def test_add_track_positive(self):
-    #     #Login
-    #     self.client.login(email="test1@user.com", password="Meep!234")
-
-    #     #url
-    #     url = reverse("add_track_to_playlist", args=[self.user_1.username, self.test_playlist.playlist_name])
-
-    #     response = self.client.post(url, {
-    #         'track_type': self.track_type,
-    #         'track_name': self.track_name,
-    #         'artist': self.artist,
-    #         'album_name': self.album,
-    #         'genre': self.genre,
-    #         'purchase_link': self.purchase_link,
-    #         'streaming_platform': self.streaming_platform,
-    #         'streaming_link': self.purchase_link
-    #     })
-
-    #     #Check the track was added
-    #     self.assertEqual(response.status_code, 302)
-
-    #     #Get relevant playlist
-    #     playlist = Playlist.objects.get(playlist_name=self.test_playlist.playlist_name)
-
-    #     #Verify track was added in database
-    #     self.assertTrue(
-    #         PlaylistTrack.objects.filter(
-    #             added_by=self.user_1
-    #         ).exists()
-    #     )
-    #     #Verify track is added to PlaylistTrack
-    #     playlist_track = PlaylistTrack.objects.get(playlist=playlist.id)
-    #     self.assertEqual(playlist_track.playlist, self.test_playlist)
-    #     self.assertEqual(playlist_track.added_by, self.user_1)
-    #     self.assertEqual(playlist_track.position, 1)
-    #     self.assertIsNotNone(playlist_track.added_at)
-
-    #     #Verify track is added to PlaylistTrack
-    #     self.assertTrue(
-    #         Track.objects.filter(
-    #             track_name=self.track_name,
-    #             artist=self.artist
-    #         ).exists()
-    #     )
-
-    #     track = Track.objects.get(pk=playlist_track.track_id)
-    #     self.assertEqual(track.track_name, self.track_name)
-    #     self.assertEqual(track.track_type, self.track_type)
-    #     self.assertEqual(track.artist, self.artist)
-    #     self.assertEqual(track.album_name, self.album)
-    #     self.assertEqual(track.genre, self.genre)
-    #     self.assertEqual(track.purchase_link, self.purchase_link)
-    #     self.assertEqual(track.created_by, self.user_1)
-    #     self.assertIsNotNone(track.date_added)
-
-    #     #Verify track is added to StreamingLink
-    #     self.assertTrue(
-    #         StreamingLink.objects.filter(
-    #             track=track.id,
-    #             streaming_platform=self.streaming_platform
-    #         ).exists()
-    #     )
-
-    #     streaming_track_link = StreamingLink.objects.get(track=track.id)
-
-    #     self.assertEqual(streaming_track_link.streaming_platform, self.streaming_platform)
-    #     self.assertEqual(streaming_track_link.streaming_link, self.purchase_link)
-    #     self.assertEqual(streaming_track_link.added_by, self.user_1)
-    #     self.assertIsNotNone(track.date_added)
-
-    #     #Check correct redirect url after 
-    #     expected_url = reverse("view_edit_playlist", args=[self.user_1.username, self.test_playlist.playlist_name])
-    #     self.assertRedirects(response, expected_url)
 
 
 class ViewTracksInPlaylist(BaseTestCase):
@@ -287,32 +212,29 @@ class AddLinkToTrackTest(BaseTestCase):
     view we're testing:
         - add_streaming_link_to_playlist(request, username, playlist_name)
             - url: path('<str:username>/<str:playlist_name>/add_link_to_track', views.add_streaming_link_to_playlist, name = 'add_streaming_link_to_playlist') #add track to a specific playlist
-
-    #TODO Test cases:
-        - positive cases:
-            - Link works
-            - Retrieve youtube_meta_data_dict from request.session
-                - Test the data dictionary is not empty
     '''
     def test_add_streaming_link_to_playlist_positive(self):
-        '''
-        '''
         #Login
-        self.client.login(email="test1@user.com", password="Meep!234")
-        #Create url
-        url = reverse("add_streaming_link_to_playlist", args=[self.user_1.username, self.test_playlist.playlist_name])
-        #Generate response
-        response = self.client.post(url, {
+        login_success = self.client.login(email="test1@user.com", password="Meep!234")
+        self.assertTrue(login_success, "Login failed")
+        
+        url = reverse("add_streaming_link_to_playlist", 
+                    args=[self.user_1.username, self.test_playlist.playlist_name])
+        
+        post_data = {
             'track_type': self.simple_track_2.track_type,
             'streaming_link': self.simple_streaming_link_2.streaming_link
-        })
+        }
+        
+        response = self.client.post(url, post_data)
 
-        #Check the form was submitted correctly
-        self.assertEqual(response.status_code, 302)
-
-        #Check the correct redirect url after
-        expected_url = reverse("add_track_to_playlist", args=[self.user_1.username, self.test_playlist.playlist_name])
-        self.assertRedirects(response, expected_url)
+        self.assertEqual(response.status_code, 302, 
+                        f"Expected redirect (302) but got {response.status_code}")
+        
+        if response.status_code == 302:
+            expected_url = reverse("add_track_to_playlist", 
+                                args=[self.user_1.username, self.test_playlist.playlist_name])
+            self.assertRedirects(response, expected_url)
 
     def test_add_streaming_link_to_playlist_negative(self):
         #Login
@@ -321,7 +243,7 @@ class AddLinkToTrackTest(BaseTestCase):
         url = reverse("add_streaming_link_to_playlist", args=[self.user_1.username, self.test_playlist.playlist_name])
         #Generate response
         response = self.client.post(url, {
-            'track_type':"track",
+            'playlist_type':"tracks",
             'streaming_link': "https://maps.google.com/"
         })
 
