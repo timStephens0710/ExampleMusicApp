@@ -2,7 +2,8 @@ from django.test import TestCase
 from music_app_archive.src.utils import (
     orch_validate_input_string,
     get_hostname,
-    check_streaming_link_platform
+    check_streaming_link_platform,
+    map_playlist_type_track_type
 )
 
 class TestUtils(TestCase):
@@ -56,3 +57,27 @@ class TestUtils(TestCase):
         '''
         platform = check_streaming_link_platform('https://unsupported.com')
         self.assertIsNone(platform)
+
+    def test_mapped_track_type_positive(self):
+        '''
+        Test function maps are expected
+        '''
+        playlist_type = 'mixes'
+        track_type = map_playlist_type_track_type(playlist_type)
+        self.assertEqual(track_type, 'mix')
+
+    def test_mapped_none_track_type(self):
+        '''
+        Value error should be raised when track_type is None
+        '''
+        playlist_type = None
+        with self.assertRaises(ValueError):
+            map_playlist_type_track_type(playlist_type)
+
+    def test_invalid_playlist_type(self):
+        '''
+        Value error should be raised when track_type is None
+        '''
+        playlist_type = "playlists"
+        with self.assertRaises(ValueError):
+            map_playlist_type_track_type(playlist_type)

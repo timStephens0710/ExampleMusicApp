@@ -11,6 +11,7 @@ from music_app_auth.models import AppLogging
 from .forms import *
 from .src.integrations.main_integrations import orchestrate_platform_api
 from .src.custom_exceptions import BandCampMetaDataError, YouTubeMetaDataError
+from .src.utils import map_playlist_type_track_type
 
 from music_app_auth.models import CustomUser
 from music_app_auth.src.django_error_utils import handle_django_error
@@ -166,9 +167,6 @@ def add_streaming_link_to_playlist(request, username, playlist_name):
     #Get relevant user_id
     user_id = user.id
 
-    #Initialise forms
-    add_streaming_link_to_playlist_form = AddStreamingLink()
-
     #Verify playlist exists and belongs to user
     try:
         playlist = Playlist.objects.get(playlist_name=playlist_name, owner=user, is_deleted=False)
@@ -176,6 +174,17 @@ def add_streaming_link_to_playlist(request, username, playlist_name):
         logger.warning(f"Playlist '{playlist_name}' not found for user {username}")
         messages.error(request, f"Playlist '{playlist_name}' not found")
         return redirect('user_playlists', username=username)
+    
+
+    #Map playlist_type to track_type
+    mapped_track_type = map_playlist_type_track_type(playlist.playlist_type)
+
+    #Initialise forms
+    add_streaming_link_to_playlist_form = AddStreamingLink(
+        initial={
+            'track_type': mapped_track_type
+        }
+    )
 
     #AddStreamingLink() form
     if request.method== 'POST':
@@ -257,7 +266,11 @@ def add_streaming_link_to_playlist(request, username, playlist_name):
             return render(request, 'add_link.html', context)
     
     #Generate empty form
-    add_streaming_link_to_playlist_form = AddStreamingLink()
+    add_streaming_link_to_playlist_form = AddStreamingLink(
+        initial={
+            'track_type': mapped_track_type
+        }
+    )
     context = {
         'username': username,
         'playlist_name': playlist_name,
@@ -273,16 +286,6 @@ def add_track_to_playlist(request, username, playlist_name):
     This form update the Track and StreamingLink models.
         - The Track & StreamingLink model can be updated here
             - The other place is when a user posts (to come later on)
-
-    #TODO:
-        - Build checker function to see if track already exists in Track & Playlist. 
-        - JS or TypeScript built into the form regarding playlist_type + track_type.
-            - That is, if playlist_type is tracks then the user can only submit track_type == 'track'
-            - The exception being 'Liked' Playlist which is a combination of all the posts that a user has liked on their feed.
-        - Once forms are saving and the model is updating correctly, work on building an API
-        to pull all of the relevant meta data relating to the link from the music.
-            - That is, they paste the link from YouTube and I pull all of the meta data to fill in
-            the two forms.
     '''
     #Get user instance via username
     user = get_object_or_404(CustomUser, username=username)
@@ -296,8 +299,6 @@ def add_track_to_playlist(request, username, playlist_name):
 
     #Get playlist instance
     playlist = get_object_or_404(Playlist, playlist_name=playlist_name, owner=user, is_deleted=False)
-
-    #TODO Call function to check if the track exists in Track & Playlist model
 
     #Get youtube_meta_data_dict
     meta_data_dict = request.session.get("meta_data_dict")
@@ -455,9 +456,6 @@ def add_track_to_playlist(request, username, playlist_name):
 def view_edit_playlist(request, username, playlist_name):
     '''
     Displays a specific playlist for a user, where they can edit.
-
-    #TODO:
-        - Add the ability to remove songs
     '''
     #Get user instance via username
     user = get_object_or_404(CustomUser, username=username)

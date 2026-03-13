@@ -10,6 +10,11 @@ PLATFORM_DOMAINS = {
     'bandcamp': ['bandcamp.com'],
 }
 
+PLAYLIST_TO_TRACK_TYPE = {
+    'tracks': 'track',
+    'mixes': 'mix',
+    'samples': 'sample',
+}
 
 def orch_validate_input_string(input_string: str, name_input_string: str):
     '''
@@ -60,3 +65,18 @@ def check_streaming_link_platform(streaming_link: str) -> str:
     except Exception:
         return None
     
+
+def map_playlist_type_track_type(playlist_type: str) -> str:
+    '''
+    Maps playlist type to the corresponding track_type
+    '''
+    if playlist_type is None:
+        raise ValueError("playlist_type cannot be None")
+    
+    try:
+        return PLAYLIST_TO_TRACK_TYPE[playlist_type]
+    except KeyError:
+        raise ValueError(
+            f"Invalid playlist_type: '{playlist_type}'. "
+            f"Must be one of {list(PLAYLIST_TO_TRACK_TYPE.keys())}"
+        )
