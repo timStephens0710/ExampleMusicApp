@@ -383,13 +383,6 @@ This frontend workspace serves as a learning project focused on:
 4. **Build Tools** - Modern bundling with Vite
 5. **Django Integration** - Seamless backend/frontend communication
 
-## License
-
-[Your License Here]
-
-## Contact
-
-[Your Contact Information]
 
 ---
 
