@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-airflow-common:
   # Common configuration shared across all Airflow services
   # This avoids repeating the same config for webserver and scheduler
