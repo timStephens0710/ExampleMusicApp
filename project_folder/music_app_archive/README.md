@@ -3,8 +3,6 @@
 `music_app_archive` is the archive / playlist management module for the Music App.  
 It lets authenticated users create playlists, add tracks (via streaming links or manual entry), manage streaming links, and view/edit playlists. The app integrates with platform APIs (e.g., YouTube, Bandcamp) to fetch metadata, logs user activity, and uses transactional saves to keep playlist/track/link data consistent.
 
-**Please note this is currently a POC**, I'm now going to prioritise implementing TypeScript.  The main reason for this project was to teach myself TypeScript.
-
 ---
 
 ## Table of Contents
@@ -35,6 +33,8 @@ It lets authenticated users create playlists, add tracks (via streaming links or
 - Add streaming links — attempts to fetch metadata from platform APIs  
 - Add track + streaming link together in a single transactional operation (atomic)  
 - View & edit playlists, displaying track metadata and links  
+- **Soft-delete playlists** - Mark playlists as deleted without removing data
+- **Soft-delete tracks from playlists** - Remove tracks while preserving data integrity
 - Robust handling of platform API failures with fallbacks to manual entry  
 - Per-user activity logging through `AppLogging`  
 - Form validation and user-friendly messages via Django `messages`  
@@ -53,6 +53,7 @@ It lets authenticated users create playlists, add tracks (via streaming links or
 4. **Add Track Details** - User fills track form (prefilled where metadata exists) and streaming link form
    - Both saved in a single DB transaction (`transaction.atomic()`)
 5. **View Playlist** - Playlist track listing shows each track, streaming links, and metadata
+6. **Delete Content** - User can delete playlists or remove tracks (soft deletion preserves data)
 
 ---
 
@@ -74,6 +75,63 @@ Create a new playlist with validation:
 - Unique playlist name per user (handles `IntegrityError`)
 - Security check prevents creating playlists for other users
 
+**`delete_playlists(request, username)`** 
+Soft-delete one or more playlists owned by the user.
+
+**Method:** `DELETE`  
+**URL:** `/<username>/delete_playlists/`
+
+**Request Body:**
+```json
+{
+  "playlist_id": [1, 2, 3]
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "deleted_count": 3
+}
+```
+
+**Response (Error):**
+```json
+{
+  "success": false,
+  "error": "empty playlist_ids_to_be_deleted"
+}
+```
+
+**Status Codes:**
+- `200` - Success
+- `400` - Bad request (empty playlist_ids or unexpected error)
+- `403` - Forbidden (user doesn't own playlists)
+- `404` - User not found
+
+**Security:**
+- Validates user owns the playlists
+- Only soft-deletes (sets `is_deleted=True`)
+- Returns `403 Forbidden` for unauthorized attempts
+- Logs all deletion attempts
+
+**Example Usage:**
+```javascript
+fetch('/johndoe/delete_playlists/', {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': csrfToken
+  },
+  body: JSON.stringify({
+    playlist_id: [5, 12, 23]
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data.deleted_count + ' playlists deleted'));
+```
+
 ### Adding Tracks to Playlists
 
 **`add_streaming_link_to_playlist(request, username, playlist_name)`**  
@@ -92,6 +150,66 @@ Add track with metadata to playlist:
   - `PlaylistTrack` (links Track to Playlist with auto-incremented `position`)
 - Handles `IntegrityError` (duplicate tracks/links)
 - All saves wrapped in `transaction.atomic()` for consistency
+
+**`delete_playlist_tracks(request, username, playlist_name)`** 
+Soft-delete one or more tracks from a specific playlist.
+
+**Method:** `DELETE`  
+**URL:** `/<username>/<playlist_name>/delete_tracks/`
+
+**Request Body:**
+```json
+{
+  "playlist_track_id": ["uuid-1", "uuid-2", "uuid-3"]
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "deleted_count": 3
+}
+```
+
+**Response (Error):**
+```json
+{
+  "success": false,
+  "error": "empty playlist_track_ids_to_be_deleted"
+}
+```
+
+**Status Codes:**
+- `200` - Success
+- `400` - Bad request (empty IDs or unexpected error)
+- `403` - Forbidden (user doesn't own playlist)
+- `404` - User not found
+
+**Security:**
+- Validates user owns the playlist via `playlist__owner`
+- Only soft-deletes (sets `is_deleted=True`)
+- Returns `403 Forbidden` for unauthorized attempts
+- Logs all deletion attempts with playlist and track details
+
+**Example Usage:**
+```javascript
+fetch('/johndoe/summer-vibes/delete_tracks/', {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': csrfToken
+  },
+  body: JSON.stringify({
+    playlist_track_id: [
+      'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      'b2c3d4e5-f6a7-8901-bcde-f12345678901'
+    ]
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data.deleted_count + ' tracks removed'));
+```
 
 ### Viewing & Editing
 
@@ -120,7 +238,7 @@ Fields:
 - description (CharField)
 - date_created, date_updated (DateTimeField)
 - is_private (CharField: 'public', 'private')
-- is_deleted (BooleanField)
+- is_deleted (BooleanField)  # Soft deletion flag
 
 Constraints:
 - Unique: (owner, playlist_name)
@@ -155,10 +273,12 @@ Constraints:
 **`PlaylistTrack`** (Junction Table)  
 ```python
 Fields:
+- id (UUIDField, primary key)
 - playlist (FK to Playlist)
 - track (FK to Track)
 - added_by (FK to CustomUser)
 - position (PositiveIntegerField, auto-incremented)
+- is_deleted (BooleanField)  # Soft deletion flag
 - added_at (DateTimeField)
 
 Constraints:
@@ -264,6 +384,7 @@ See [`src/integrations/README.md`](src/integrations/README.md) for detailed inte
 - Catches platform-specific exceptions gracefully
 - Provides fallback to manual entry on API failures
 - Security checks prevent unauthorized actions
+- JSON error responses for API endpoints
 
 **Service Layer:**
 - Uses `get_object_or_404()` for automatic 404 handling
@@ -294,10 +415,19 @@ logger.exception("Unexpected error")  # Includes stack trace
 
 **User Actions Logged:**
 - Playlist creation
+- Playlist deletion (with IDs and username)
 - Track additions
+- Track deletion from playlists (with IDs and playlist name)
 - Streaming link submissions
 - API failures
 - Database errors
+
+**Deletion Logging Examples:**
+```python
+logger.info(f"The following playlists by {username} have been deleted: {playlist_ids}")
+logger.info(f"The following tracks from {playlist_name} by {username} have been deleted: {track_ids}")
+logger.exception(f"Unexpected error deleting playlist(s): {playlist_ids}: {error}")
+```
 
 **AppLogging Model:**
 ```python
@@ -324,6 +454,12 @@ with transaction.atomic():
 - All-or-nothing saves (no partial data)
 - Prevents orphaned records
 - Database consistency guaranteed
+
+**Soft Deletion Strategy:**
+- Playlists and tracks marked as deleted (`is_deleted=True`)
+- Data preserved for auditing and recovery
+- Can be filtered out in queries with `.filter(is_deleted=False)`
+- No cascade deletion prevents accidental data loss
 
 ---
 
@@ -451,6 +587,21 @@ conda activate music_app
 
 ---
 
+## Environment Variables
+
+Required environment variables:
+
+```bash
+# YouTube API
+YOUTUBE_API_KEY=your_youtube_api_key_here
+
+# Django Settings
+SECRET_KEY=your_secret_key_here
+DEBUG=True  # Set to False in production
+```
+
+---
+
 ## How to Run (Dev)
 
 ### 1. Run Migrations
@@ -504,22 +655,20 @@ coverage html  # Generate HTML report
 ```python
 tests/
 ├── test_models.py        # Model tests (Playlist, Track, etc.)
-├── test_views.py         # View tests (create_playlist, add_track, etc.)
+├── test_views.py         # View tests (create_playlist, add_track, delete, etc.)
 ├── test_forms.py         # Form validation tests
 ├── test_services.py      # Service layer tests
 ├── test_integrations.py  # API integration tests
 └── test_utils.py         # Utility function tests
 ```
-
 ---
 
 ## TODO / Improvements
 
 ### High Priority
-- **Implement Typescript** - dramatically improve the front-end
+- **Continue To Implement TypeScript** - dramatically improve the front-end
 - **SoundCloud integration** - Add SoundCloud API support
 - **Fix get_playlist_tracks bug** - currently doesn't work as intended when called in the view
-- **UI for removing tracks** - Add delete functionality in playlist view
 - **Track reordering** - Drag-and-drop to update position
 - **Duplicate prevention** - Pre-check before DB save
 
@@ -527,6 +676,7 @@ tests/
 - **Pagination** - For playlists with 100+ tracks
 - **Search functionality** - Search within playlists
 - **Playlist sharing** - Share playlists with other users
+- **Bulk operations UI** - Select multiple items for deletion
 
 ### Low Priority / Future
 - **Background tasks** - Move API calls to Celery for async processing
@@ -542,24 +692,44 @@ tests/
 - `prefetch_related()` for reverse ForeignKey relationships
 - Only 3 queries for playlist view (any size)
 - Session-based metadata storage (reduces API calls)
+- Soft deletion (faster than hard deletion)
+- Bulk updates for deletion (`update()` instead of `save()`)
 
 ### Recommended for Production
--   Redis caching for API responses
--   CDN for static files
--   Database query caching
--   Async task queue (Celery)
--   Rate limiting on API endpoints
+- Redis caching for API responses
+- CDN for static files
+- Database query caching
+- Async task queue (Celery)
+- Rate limiting on API endpoints
+- Database indexing on `is_deleted` fields
 
 ---
 
 ## Security Considerations
 
+### Authentication & Authorization
 - Authentication required for all views (`@login_required`)
 - User can only modify their own playlists (ownership checks)
+- Ownership verified via `playlist__owner` for nested operations
+- Returns `403 Forbidden` for unauthorized attempts
+
+### Data Protection
 - CSRF protection on all forms
 - Database transactions prevent partial saves
 - Input validation on all forms
 - URL validation prevents malicious links
 - API keys stored in environment variables (not in code)
+- Soft deletion preserves audit trail
+
+### API Security
+- JSON validation on DELETE endpoints
+- Empty array validation prevents no-op requests
+- Comprehensive error logging without exposing internals
+- Generic error messages to users (detailed logs for admins)
+
+### Password Security
+- Passwords secured using **Argon2**, the winner of the Password Hashing Competition
+- Argon2 is specifically designed to resist brute-force attacks, GPU cracking, and ASIC attacks by being intentionally slow and memory-intensive
+- Makes it computationally infeasible for attackers to crack passwords even if the database is compromised
 
 ---
