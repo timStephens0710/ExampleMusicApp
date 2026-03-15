@@ -52,16 +52,18 @@
                 </div>
             </div>
         </div>
-        <button id="edit-playlists-btn" class="btn btn-secondary">Edit Playlists</button>
-        <button id="delete-playlists-btn" class="btn btn-danger d-none">Delete</button>
-        <button id="cancel-edit-btn" class="btn btn-secondary d-none">Cancel</button>
-    </div>
+      </div>
 </section>
 <!-- end overview -->
 
 
 <div>
   <a  href="{% url 'create_playlist' username=request.user.username %}" class="nav-link">Create Playlist</a>
+</div>
+<div>
+        <button id="edit-playlists-btn" class="btn-action">Edit Playlists</button>
+        <button id="delete-playlists-btn" class="btn btn-danger d-none">Delete</button>
+        <button id="cancel-edit-btn" class="btn btn-secondary d-none">Cancel</button>
 </div>
 
 <script src="{% static 'music_app/js/deletePlaylists.js' %}" defer></script>

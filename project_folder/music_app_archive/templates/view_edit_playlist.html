@@ -80,14 +80,17 @@
             </div>
         </div>
     </div>
-    <button id="edit-playlist-tracks-btn" class="btn btn-secondary">Edit Playlist</button>
-    <button id="delete-playlist-tracks-btn" class="btn btn-danger d-none">Delete</button>
-    <button id="cancel-edit-btn" class="btn btn-secondary d-none">Cancel</button>
 </section>
 <!-- end of playlist -->
 
 <div>
   <a  href="{% url 'add_streaming_link_to_playlist' username=username  playlist_name=playlist_name %}" class="nav-link">Add track</a>
+</div>
+
+<div>
+    <button id="edit-playlist-tracks-btn" class="btn-action">Edit Playlist</button>
+    <button id="delete-playlist-tracks-btn" class="btn btn-danger d-none">Delete</button>
+    <button id="cancel-edit-btn" class="btn btn-secondary d-none">Cancel</button>
 </div>
 
 <script src="{% static 'music_app/js/deletePlaylistTracks.js' %}" defer></script>

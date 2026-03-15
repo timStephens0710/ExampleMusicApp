@@ -124,3 +124,20 @@ authentication process.*/
 .button-style:hover {
   color: #66F523;               /* green hover color */
 }
+
+/* Custom action button - used for Edit Playlists, Edit Tracks. */
+.btn-action {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #ccc;
+    font-size: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.btn-action:hover {
+    color: #66F523;
+}
