@@ -559,7 +559,7 @@ def delete_playlists(request, username):
         return JsonResponse({'success': False, 'error': 'empty playlist_ids_to_be_deleted'}, status=400)
     try:
         #Get the relevant playlists and update is_deleted = True
-        updated=Playlist.objects.filter(owner=user, id__in=playlist_ids_to_be_deleted).update(is_deleted=True)
+        updated=Playlist.objects.filter(owner=request.user.id, id__in=playlist_ids_to_be_deleted).update(is_deleted=True)
         logger.info(f"The following playlists by {username} have been deleted: {playlist_ids_to_be_deleted}")
         return JsonResponse({'success':True, 'deleted_count': updated})
     except Exception as e:
@@ -588,10 +588,10 @@ def delete_playlist_tracks(request, username, playlist_name):
         return JsonResponse({'success': False, 'error': 'empty playlist_track_ids_to_be_deleted'}, status=400)
     try:
         #Get the relevant tracks and update is_deleted = True
-        updated=PlaylistTrack.objects.filter(playlist__owner=user, id__in=playlist_track_ids_to_be_deleted).update(is_deleted=True)
-        logger.info(f"The following tracks by {username} have been deleted: {playlist_track_ids_to_be_deleted}")
+        updated=PlaylistTrack.objects.filter(playlist__owner=request.user.id, id__in=playlist_track_ids_to_be_deleted).update(is_deleted=True)
+        logger.info(f"The following tracks from {playlist_name} by {username} have been deleted: {playlist_track_ids_to_be_deleted}")
         return JsonResponse({'success':True, 'deleted_count': updated})
     except Exception as e:
         # Unexpected error
-        logger.exception(f"Unexpected error deleting track(s): {playlist_track_ids_to_be_deleted}: {e}")
+        logger.exception(f"Unexpected error deleting track(s) in {playlist_name}: {playlist_track_ids_to_be_deleted}: {e}")
         return JsonResponse({'success': False, 'error': 'unexpected error'}, status=400)
