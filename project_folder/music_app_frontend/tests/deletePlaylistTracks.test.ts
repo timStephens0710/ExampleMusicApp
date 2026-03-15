@@ -1,0 +1,245 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { init } from '../src/deletePlaylistTracks';
+
+// ─── Mock bootstrap as a global ──────────────────────────────────────────────
+
+const mockShow = vi.fn();
+const mockHide = vi.fn();
+
+vi.stubGlobal('bootstrap', {
+    Modal: vi.fn().mockImplementation(function(this: any) {
+        this.show = mockShow;
+        this.hide = mockHide;
+    }),
+});
+
+// ─── Mock fetch ───────────────────────────────────────────────────────────────
+
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
+
+// ─── DOM Setup ───────────────────────────────────────────────────────────────
+
+function buildDOM(): void {
+    document.body.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th class="checkbox-header d-none"></th>
+                    <th>#</th>
+                    <th>Track Title</th>
+                    <th>Artist</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="row_table" data-playlist-track-id="1">
+                    <td class="playlist-track-checkbox-cell d-none">
+                        <input type="checkbox" class="playlist-track-checkbox">
+                    </td>
+                    <td>1</td>
+                    <td>Another Life</td>
+                    <td>Horse Vision</td>
+                </tr>
+                <tr class="row_table" data-playlist-track-id="2">
+                    <td class="playlist-track-checkbox-cell d-none">
+                        <input type="checkbox" class="playlist-track-checkbox">
+                    </td>
+                    <td>2</td>
+                    <td>If I Had A Gun</td>
+                    <td>Noel Gallagher</td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="edit-playlist-tracks-btn">Edit Tracks</button>
+        <button id="delete-playlist-tracks-btn" class="d-none">Delete</button>
+        <button id="cancel-edit-btn" class="d-none">Cancel</button>
+        <div id="confirmDeleteModal">
+            <button
+                id="confirm-delete-btn"
+                data-delete-url="/music_app_archive/test1/test_playlist/delete_playlist_tracks/">
+                Delete
+            </button>
+        </div>`;
+}
+
+// ─── Tests ───────────────────────────────────────────────────────────────────
+
+describe('deletePlaylistTracks.ts', () => {
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.stubGlobal('fetch', mockFetch);
+        vi.stubGlobal('bootstrap', {
+            Modal: vi.fn().mockImplementation(function(this: any) {
+                this.show = mockShow;
+                this.hide = mockHide;
+            }),
+        });
+        Object.defineProperty(document, 'cookie', {
+            writable: true,
+            value: 'csrftoken=testcsrftoken123',
+        });
+        buildDOM();
+        init();
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    // ── 1. Edit button ────────────────────────────────────────────────────────
+
+    describe('Edit button', () => {
+        it('shows checkboxes, delete and cancel buttons — and hides itself', () => {
+            const editBtn = document.getElementById('edit-playlist-tracks-btn')!;
+            const deleteBtn = document.getElementById('delete-playlist-tracks-btn')!;
+            const cancelBtn = document.getElementById('cancel-edit-btn')!;
+            const checkboxHeader = document.querySelector('.checkbox-header')!;
+            const checkboxCells = document.querySelectorAll('.playlist-track-checkbox-cell');
+
+            editBtn.click();
+
+            expect(editBtn.classList.contains('d-none')).toBe(true);
+            expect(deleteBtn.classList.contains('d-none')).toBe(false);
+            expect(cancelBtn.classList.contains('d-none')).toBe(false);
+            expect(checkboxHeader.classList.contains('d-none')).toBe(false);
+            checkboxCells.forEach(cell => {
+                expect(cell.classList.contains('d-none')).toBe(false);
+            });
+        });
+    });
+
+    // ── 2. Cancel button ──────────────────────────────────────────────────────
+
+    describe('Cancel button', () => {
+        it('resets to default view and unchecks all checkboxes', () => {
+            const editBtn = document.getElementById('edit-playlist-tracks-btn')!;
+            const deleteBtn = document.getElementById('delete-playlist-tracks-btn')!;
+            const cancelBtn = document.getElementById('cancel-edit-btn')!;
+            const checkboxHeader = document.querySelector('.checkbox-header')!;
+            const checkboxCells = document.querySelectorAll<HTMLElement>('.playlist-track-checkbox-cell');
+
+            editBtn.click();
+            checkboxCells.forEach(cell => {
+                const cb = cell.querySelector<HTMLInputElement>('input[type="checkbox"]');
+                if (cb) cb.checked = true;
+            });
+            cancelBtn.click();
+
+            expect(editBtn.classList.contains('d-none')).toBe(false);
+            expect(deleteBtn.classList.contains('d-none')).toBe(true);
+            expect(cancelBtn.classList.contains('d-none')).toBe(true);
+            expect(checkboxHeader.classList.contains('d-none')).toBe(true);
+            checkboxCells.forEach(cell => {
+                expect(cell.classList.contains('d-none')).toBe(true);
+                const cb = cell.querySelector<HTMLInputElement>('input[type="checkbox"]');
+                expect(cb?.checked).toBe(false);
+            });
+        });
+    });
+
+    // ── 3. Delete button ──────────────────────────────────────────────────────
+
+    describe('Delete button', () => {
+        it('shows the modal when at least one checkbox is ticked', () => {
+            const editBtn = document.getElementById('edit-playlist-tracks-btn')!;
+            const deleteBtn = document.getElementById('delete-playlist-tracks-btn')!;
+            const checkboxCells = document.querySelectorAll<HTMLElement>('.playlist-track-checkbox-cell');
+
+            editBtn.click();
+            checkboxCells[0].querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked = true;
+            deleteBtn.click();
+
+            expect(mockShow).toHaveBeenCalledTimes(1);
+        });
+
+        it('shows the modal even when no checkboxes are ticked', () => {
+            const editBtn = document.getElementById('edit-playlist-tracks-btn')!;
+            const deleteBtn = document.getElementById('delete-playlist-tracks-btn')!;
+
+            editBtn.click();
+            deleteBtn.click();
+
+            expect(mockShow).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    // ── 4. Confirm delete ─────────────────────────────────────────────────────
+
+    describe('Confirm delete button', () => {
+        it('sends a DELETE request with the correct payload and headers', async () => {
+            mockFetch.mockResolvedValueOnce({
+                json: async () => ({ success: true, deleted_count: 1 }),
+            });
+
+            const editBtn = document.getElementById('edit-playlist-tracks-btn')!;
+            const deleteBtn = document.getElementById('delete-playlist-tracks-btn')!;
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn')!;
+            const checkboxCells = document.querySelectorAll<HTMLElement>('.playlist-track-checkbox-cell');
+
+            editBtn.click();
+            checkboxCells[0].querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked = true;
+            deleteBtn.click();
+            confirmDeleteBtn.click();
+
+            await vi.waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+
+            const [url, options] = mockFetch.mock.calls[0];
+            expect(url).toContain('/delete_playlist_tracks/');
+            expect(options.method).toBe('DELETE');
+            expect(options.headers['Content-Type']).toBe('application/json');
+            expect(options.headers['X-CSRFToken']).toBe('testcsrftoken123');
+            expect(JSON.parse(options.body)).toEqual({ playlist_track_id: [1] });
+        });
+
+        it('hides the modal and reloads the page on success', async () => {
+            mockFetch.mockResolvedValueOnce({
+                json: async () => ({ success: true, deleted_count: 1 }),
+            });
+
+            const reloadMock = vi.fn();
+            vi.stubGlobal('location', {
+                ...window.location,
+                pathname: '/music_app_archive/test1/test_playlist/',
+                reload: reloadMock,
+            });
+
+            const editBtn = document.getElementById('edit-playlist-tracks-btn')!;
+            const deleteBtn = document.getElementById('delete-playlist-tracks-btn')!;
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn')!;
+            const checkboxCells = document.querySelectorAll<HTMLElement>('.playlist-track-checkbox-cell');
+
+            editBtn.click();
+            checkboxCells[0].querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked = true;
+            deleteBtn.click();
+            confirmDeleteBtn.click();
+
+            await vi.waitFor(() => expect(reloadMock).toHaveBeenCalledTimes(1));
+            expect(mockHide).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not reload the page on a failed response', async () => {
+            mockFetch.mockResolvedValueOnce({
+                json: async () => ({ success: false }),
+            });
+
+            const reloadMock = vi.fn();
+            vi.stubGlobal('location', {
+                ...window.location,
+                pathname: '/music_app_archive/test1/test_playlist/',
+                reload: reloadMock,
+            });
+
+            const editBtn = document.getElementById('edit-playlist-tracks-btn')!;
+            const deleteBtn = document.getElementById('delete-playlist-tracks-btn')!;
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn')!;
+
+            editBtn.click();
+            deleteBtn.click();
+            confirmDeleteBtn.click();
+
+            await vi.waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+            expect(reloadMock).not.toHaveBeenCalled();
+        });
+    });
+});

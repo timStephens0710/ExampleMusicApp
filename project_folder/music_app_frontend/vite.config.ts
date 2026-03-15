@@ -21,6 +21,7 @@ export default defineConfig({
         validateStreamingLink: path.resolve(__dirname, './src/validateStreamingLink.ts'),
         dynamicAddTrackForm: path.resolve(__dirname, './src/dynamicAddTrackForm.ts'),
         deletePlaylists: path.resolve(__dirname, './src/deletePlaylists.ts'),
+        deletePlaylistTracks: path.resolve(__dirname, './src/deletePlaylistTracks.ts'),
       },
       output: {
         entryFileNames: '[name].js',
