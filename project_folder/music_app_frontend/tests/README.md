@@ -212,6 +212,140 @@ Tests dynamic form behavior that adapts the UI based on track type selection (tr
 Form added after page load → Detected and initialized ✓
 ```
 
+### `deletePlaylists.test.ts` 
+
+Tests the playlist deletion workflow including UI state management, modal interactions, and API requests.
+
+**Initialization Tests**:
+- Element discovery and validation
+- Bootstrap Modal instantiation
+- Event listener attachment
+- CSRF token extraction from cookies
+
+**Edit Button Behavior**:
+- Shows checkboxes in all table rows
+- Shows checkbox column header
+- Reveals Delete and Cancel buttons
+- Hides Edit button itself
+
+**Cancel Button Behavior**:
+- Hides all checkboxes and checkbox header
+- Unchecks all previously checked checkboxes
+- Hides Delete and Cancel buttons
+- Shows Edit button again
+- Resets UI to initial state
+
+**Delete Button Behavior**:
+- Shows confirmation modal when checkboxes are selected
+- Shows confirmation modal even with no checkboxes selected (allows graceful no-op)
+- Collects playlist IDs from checked rows using `data-playlist-id` attributes
+- Uses Set collection to prevent duplicate IDs
+
+**Confirm Delete Button Behavior**:
+- Sends DELETE request to correct URL (from `data-delete-url` attribute)
+- Includes correct headers:
+  - `Content-Type: application/json`
+  - `X-CSRFToken` with value from cookies
+- Sends correct payload format: `{ playlist_id: [1, 2, 3] }`
+- Hides modal on successful deletion
+- Reloads page on success
+- Does not reload page on failure
+- Unchecks all checkboxes after successful deletion
+
+**Mock Testing Patterns**:
+- Bootstrap Modal mocked with `show()` and `hide()` methods
+- `fetch` API mocked to avoid real network requests
+- `window.location.reload` mocked to prevent actual page reload
+- CSRF token injected via `document.cookie`
+
+**Key Test Scenarios**:
+```typescript
+// UI State Management
+Edit → Checkboxes visible ✓
+Cancel → UI reset, checkboxes unchecked ✓
+
+// API Integration
+DELETE request sent with correct payload ✓
+CSRF token included in headers ✓
+Correct URL endpoint called ✓
+
+// Success Flow
+success: true → Modal hidden, page reloaded ✓
+
+// Failure Flow
+success: false → No page reload ✓
+```
+
+### `deletePlaylistTracks.test.ts` 
+
+Tests the track deletion workflow within playlists, including UI controls, confirmation flow, and DELETE requests.
+
+**Initialization Tests**:
+- Element discovery with track-specific selectors
+- Bootstrap Modal setup
+- Event listener binding
+- CSRF token handling
+
+**Edit Button Behavior**:
+- Shows track checkboxes in all table rows
+- Shows checkbox column header
+- Reveals Delete and Cancel buttons
+- Hides Edit button
+
+**Cancel Button Behavior**:
+- Hides all track checkboxes and header
+- Unchecks all selected checkboxes
+- Hides Delete and Cancel buttons
+- Shows Edit button
+- Complete UI state reset
+
+**Delete Button Behavior**:
+- Shows modal when tracks are selected
+- Shows modal with no selections (graceful handling)
+- Collects playlist track IDs from `data-playlist-track-id` attributes
+- Uses integer IDs (contrast with UUID in actual implementation)
+- Set collection for ID deduplication
+
+**Confirm Delete Button Behavior**:
+- Sends DELETE request to track-specific endpoint
+- Includes proper headers:
+  - `Content-Type: application/json`
+  - `X-CSRFToken` from cookies
+- Sends payload: `{ playlist_track_id: [1, 2] }`
+- Hides modal after successful deletion
+- Reloads page on success
+- No reload on API failure
+- Clears checkbox selections post-deletion
+
+**Mock Testing Patterns**:
+- Bootstrap Modal mocked globally
+- `fetch` API completely mocked
+- `window.location.reload` stubbed
+- Cookie-based CSRF token injection
+
+**Key Differences from deletePlaylists.test.ts**:
+- Uses `data-playlist-track-id` instead of `data-playlist-id`
+- Different CSS classes: `.playlist-track-checkbox-cell` vs `.playlist-checkbox-cell`
+- Different button IDs: `#edit-playlist-tracks-btn` vs `#edit-playlists-btn`
+- Different endpoint URL pattern
+- Same testing patterns but different DOM structure
+
+**Key Test Scenarios**:
+```typescript
+// UI State
+Edit → Track checkboxes shown ✓
+Cancel → Checkboxes hidden, unchecked ✓
+
+// Deletion Flow
+Modal shown on delete click ✓
+DELETE request with correct track IDs ✓
+CSRF protection via headers ✓
+
+// Response Handling
+Success → Modal hidden, page reloaded ✓
+Failure → No reload, user can retry ✓
+```
+
 ## Test Structure
 
 All test files follow a consistent structure:
@@ -257,6 +391,11 @@ npm run test:coverage
 # Run specific test file
 npm test emailValidator.test.ts
 npm test dynamicAddTrackForm.test.ts
+npm test deletePlaylists.test.ts
+npm test deletePlaylistTracks.test.ts
+
+# Run deletion tests only
+npm test delete
 ```
 
 ## Test Coverage
@@ -268,6 +407,7 @@ The test suite provides comprehensive coverage:
 - ✅ Orchestration/coordination functions
 - ✅ Edge case handling
 - ✅ Dynamic UI behavior
+- ✅ Deletion workflows (edit, cancel, delete, confirm)
 
 ### Integration Coverage
 - ✅ DOM element selection
@@ -277,6 +417,10 @@ The test suite provides comprehensive coverage:
 - ✅ Error clearing on valid input
 - ✅ Dynamic form field visibility
 - ✅ MutationObserver patterns
+- ✅ Bootstrap Modal integration
+- ✅ Fetch API requests
+- ✅ CSRF token handling
+- ✅ Page reload behavior
 
 ### Edge Cases
 - ✅ Null/empty inputs
@@ -287,6 +431,9 @@ The test suite provides comprehensive coverage:
 - ✅ Invalid URL formats
 - ✅ Missing DOM elements
 - ✅ Asynchronous DOM injection
+- ✅ No items selected for deletion
+- ✅ Failed API responses
+- ✅ Missing CSRF token
 
 ## Mocking and Test Utilities
 
@@ -299,6 +446,9 @@ The test suite provides comprehensive coverage:
 - `vi.spyOn` - Function call tracking (for `preventDefault`)
 - `vi.fn()` - Mock function creation
 - `vi.clearAllMocks()` - Mock cleanup
+- `vi.stubGlobal()` - Global object mocking (fetch, bootstrap, location)
+- `vi.unstubAllGlobals()` - Restore global objects after tests
+- `vi.waitFor()` - Async assertion helper
 
 ### Testing Library Integration
 - `@testing-library/jest-dom/matchers` - Enhanced DOM assertions
@@ -332,6 +482,73 @@ form.dispatchEvent(submitEvent);
 
 // Select change events
 selectElement.dispatchEvent(new Event('change'));
+
+// Button clicks
+button.click();
+```
+
+### Bootstrap Modal Mocking
+
+Deletion tests mock Bootstrap's Modal class:
+
+```typescript
+const mockShow = vi.fn();
+const mockHide = vi.fn();
+
+vi.stubGlobal('bootstrap', {
+    Modal: vi.fn().mockImplementation(function(this: any) {
+        this.show = mockShow;
+        this.hide = mockHide;
+    }),
+});
+
+// Later in tests
+expect(mockShow).toHaveBeenCalledTimes(1);
+expect(mockHide).toHaveBeenCalledTimes(1);
+```
+
+### Fetch API Mocking
+
+DELETE requests are tested using mocked fetch:
+
+```typescript
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
+
+mockFetch.mockResolvedValueOnce({
+    json: async () => ({ success: true, deleted_count: 2 }),
+});
+
+// Assert fetch was called correctly
+const [url, options] = mockFetch.mock.calls[0];
+expect(options.method).toBe('DELETE');
+expect(options.headers['X-CSRFToken']).toBe('testcsrftoken123');
+```
+
+### Location Reload Mocking
+
+Page reload behavior is tested without actually reloading:
+
+```typescript
+const reloadMock = vi.fn();
+vi.stubGlobal('location', {
+    ...window.location,
+    reload: reloadMock,
+});
+
+// Later
+expect(reloadMock).toHaveBeenCalledTimes(1);
+```
+
+### CSRF Token Injection
+
+Tests inject CSRF tokens via document.cookie:
+
+```typescript
+Object.defineProperty(document, 'cookie', {
+    writable: true,
+    value: 'csrftoken=testcsrftoken123',
+});
 ```
 
 ### MutationObserver Testing
@@ -387,20 +604,32 @@ it('validates soundcloud URLs', () => {
 - Clear expected vs actual values
 - Meaningful error messages
 - Testing Library matchers for improved readability
+- Async assertions with `vi.waitFor()`
 
 ### Test Independence
 - Each test is self-contained
 - No shared state between tests
 - `beforeEach` ensures clean slate
 - `afterEach` cleanup prevents side effects
+- Mock cleanup with `vi.clearAllMocks()` and `vi.unstubAllGlobals()`
 
 ### Comprehensive Coverage
 - Happy path (valid inputs)
 - Sad path (invalid inputs)
-- Edge cases (null, empty, whitespace)
+- Edge cases (null, empty, whitespace, no selections)
 - Integration scenarios (real DOM interaction)
-- Asynchronous behavior (MutationObserver)
+- Asynchronous behavior (MutationObserver, fetch)
 - Error handling and graceful degradation
+- API response scenarios (success, failure)
+
+### Deletion Test Patterns
+- UI state transitions (edit → delete → cancel)
+- Modal interaction flow
+- Checkbox selection tracking
+- API request validation (method, headers, payload)
+- Success and failure response handling
+- CSRF token inclusion
+- Page reload behavior
 
 ## Known Limitations
 
@@ -410,6 +639,10 @@ it('validates soundcloud URLs', () => {
 - Performance testing (validation speed)
 - Internationalization (error messages in multiple languages)
 - Real network requests (URL validation is local)
+- Actual Bootstrap Modal rendering
+- Real page reloads (mocked for testing)
+- Network failures and timeout scenarios
+- Concurrent deletion attempts
 
 ### Future Test Enhancements
 - Add visual regression tests for error display
@@ -421,6 +654,11 @@ it('validates soundcloud URLs', () => {
 - Add tests for network failures in URL parsing
 - Test keyboard navigation and focus management
 - Add tests for screen reader announcements
+- Test optimistic UI updates
+- Test loading states during DELETE requests
+- Add tests for undo functionality
+- Test batch deletion limits
+- Add tests for deletion confirmation timeout
 
 ## Continuous Integration
 
@@ -428,11 +666,19 @@ These tests are designed to run in CI/CD pipelines:
 
 ```yaml
 # Example GitHub Actions
+- name: Install Dependencies
+  run: npm ci
+
 - name: Run Tests
   run: npm test
 
 - name: Check Coverage
   run: npm run test:coverage -- --coverage.thresholds.lines=80
+  
+- name: Upload Coverage
+  uses: codecov/codecov-action@v3
+  with:
+    files: ./coverage/coverage-final.json
 ```
 
 ## Debugging Tests
@@ -441,6 +687,8 @@ These tests are designed to run in CI/CD pipelines:
 ```bash
 npm test -- emailValidator.test.ts
 npm test -- dynamicAddTrackForm.test.ts
+npm test -- deletePlaylists.test.ts
+npm test -- deletePlaylistTracks.test.ts
 ```
 
 ### Verbose Output
@@ -456,10 +704,57 @@ node --inspect-brk ./node_modules/vitest/vitest.mjs
 ### Watch Mode for Specific Test
 ```bash
 npm test -- --watch dynamicAddTrackForm.test.ts
+npm test -- --watch deletePlaylists.test.ts
+```
+
+### Run Only Deletion Tests
+```bash
+npm test -- delete
+# Runs both deletePlaylists.test.ts and deletePlaylistTracks.test.ts
+```
+
+## Common Test Patterns
+
+### Testing Button Click Flows
+```typescript
+const editBtn = document.getElementById('edit-playlists-btn')!;
+const deleteBtn = document.getElementById('delete-playlists-btn')!;
+
+editBtn.click(); // Trigger edit mode
+
+expect(editBtn.classList.contains('d-none')).toBe(true);
+expect(deleteBtn.classList.contains('d-none')).toBe(false);
+```
+
+### Testing Checkbox State
+```typescript
+const checkbox = cell.querySelector<HTMLInputElement>('input[type="checkbox"]');
+checkbox!.checked = true;
+
+// After cancel
+expect(checkbox?.checked).toBe(false);
+```
+
+### Testing API Calls
+```typescript
+await vi.waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+
+const [url, options] = mockFetch.mock.calls[0];
+expect(url).toContain('/delete_playlists/');
+expect(options.method).toBe('DELETE');
+expect(JSON.parse(options.body)).toEqual({ playlist_id: [1] });
+```
+
+### Testing Async Flows
+```typescript
+confirmDeleteBtn.click();
+
+await vi.waitFor(() => expect(reloadMock).toHaveBeenCalledTimes(1));
+expect(mockHide).toHaveBeenCalledTimes(1);
 ```
 
 ---
 
 **Testing Framework**: Vitest  
-**Last Updated**: January 2026  
-**Test Coverage**: ~95% of validation logic
+**Last Updated**: March 2026  
+**Test Coverage**: ~95% of validation and deletion logic

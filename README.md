@@ -442,7 +442,8 @@ Success
    Edit playlist details
    Add more tracks
    Reorder tracks (future)
-   Delete tracks (future)
+   Delete tracks
+   Delete playlist(s)
    Share playlist URL
 ```
 
@@ -1307,7 +1308,7 @@ dbt Cloud is connected to:
 - [x] Selenium Grid integration
 - [x] Anti-detection web scraping
 
-### Phase 2: Data Analytics Layer (In Progress) 🔄
+### Phase 2: Data Analytics Layer ✅
 - [x] Snowflake account setup (database, schemas, warehouse, role)
 - [x] dbt Cloud connected to Snowflake and GitHub
 - [x] dbt project initialised with medallion architecture (RAW / STAGING / MARTS)
@@ -1324,8 +1325,10 @@ dbt Cloud is connected to:
 - [x] Update Python version
 - [x] Fix Bandcamp API
 - [x] Update password security with Argon 2
-- [ ] Track deletion from playlists
+- [x] Track deletion from playlists
+- [x] Track deletion from playlists
 - [ ] Improve YouTube API
+- [ ] Refactor deletePlaylists/deletePlaylistTrack ts modules into one
 - [ ] If song link exists, pull metadata from table
 - [ ] SoundCloud API integration
 - [ ] Implement TypeScript to show relevent fields for Soundcloud mix

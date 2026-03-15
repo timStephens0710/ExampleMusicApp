@@ -240,6 +240,7 @@ class PlaylistTrack(models.Model):
         )
     position=models.PositiveIntegerField(blank=True, null=True, help_text='Position of track in playlist')
     added_at=models.DateTimeField(auto_now_add=True, editable=False)
+    is_deleted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         '''

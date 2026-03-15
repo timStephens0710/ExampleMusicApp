@@ -3,7 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 
-# 2026-02-86
+# 2026-03-15
+### Added
+* User can delete playlist(s)
+* User can delete track(s) from a playlist
+
+# 2026-02-06
 ### Fixed
 * Bandcamp bug via Selenium
 

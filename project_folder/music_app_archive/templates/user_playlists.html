@@ -26,6 +26,7 @@
                     <table class="table">
                         <thead>
                             <tr>
+                                <th class="checkbox-header d-none"></th>
                                 <th scope="col">Name</th>
                                 <th scope="col">Owner</th>
                                 <th scope="col">Type</th>
@@ -36,7 +37,8 @@
                         </thead>
                         <tbody>
                             {% for user_playlist in user_playlists %}
-                            <tr class="row_table">
+                            <tr class="row_table" data-playlist-id="{{ user_playlist.id }}">
+                                <td class="playlist-checkbox-cell d-none"><input type="checkbox" class="playlist-checkbox"></td>
                                 <td class="user_playlist_name"><a href="{% url 'view_edit_playlist' username=request.user.username playlist_name=user_playlist.playlist_name%}" class="nav-link">{{user_playlist.playlist_name}}</a></td>
                                 <td class="user_playlist_owner">{{user_playlist.owner.username}}</td>
                                 <td class="user_playlist_type">{{user_playlist.playlist_type}}</td>
@@ -50,11 +52,44 @@
                 </div>
             </div>
         </div>
-    </div>
+      </div>
 </section>
 <!-- end overview -->
+
 
 <div>
   <a  href="{% url 'create_playlist' username=request.user.username %}" class="nav-link">Create Playlist</a>
 </div>
+<div>
+        <button id="edit-playlists-btn" class="btn-action">Edit Playlists</button>
+        <button id="delete-playlists-btn" class="btn-delete d-none">Delete</button>
+        <button id="cancel-edit-btn" class="btn-cancel d-none">Cancel</button>
+</div>
+
+<script src="{% static 'music_app/js/deletePlaylists.js' %}" defer></script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">Are you sure?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        Are you sure you want to delete the selected playlist(s)?
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn-delete" data-delete-url="{% url 'delete_playlists' request.user.username %}" id="confirm-delete-btn">Delete</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- end Modal -->
 {% endblock content %}
+

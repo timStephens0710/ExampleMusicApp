@@ -1,3 +1,5 @@
+import json
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -18,6 +20,20 @@ class BaseTestCase(TestCase):
             password="Meep!234",
             username="simple_john",
             email_verified=True
+        )
+
+        self.bad_user = User.objects.create_user(
+            email="badUser@test.com",
+            password="rand0mV!llian1234",
+            username="bad_user",
+            email_verified=True
+        )
+
+        self.unauth_user = User.objects.create_user(
+            email="unAuthUser@test.com",
+            password="Fre0D0cker$2026",
+            username="unauth_user",
+            email_verified=False
         )
 
         self.test_playlist = Playlist.objects.create(
@@ -43,6 +59,12 @@ class BaseTestCase(TestCase):
             purchase_link='https://horsevision.bandcamp.com/album/another-life'
         )
 
+        self.playlist_track_1 =PlaylistTrack.objects.create(
+            playlist=self.test_playlist,
+            track=self.simple_track_1,
+            added_by=self.user_1
+        )
+
         self.simple_track_2 = Track.objects.create(
             track_type='track',
             track_name='If I Had A Gun…',
@@ -57,6 +79,34 @@ class BaseTestCase(TestCase):
             streaming_link = 'https://www.youtube.com/watch?v=zYta6v1wZiI&list=LL&index=1',
             added_by = self.user_1
         )
+
+        self.playlist_track_2 = PlaylistTrack.objects.create(
+            playlist=self.test_playlist,
+            track=self.simple_track_2,
+            added_by=self.user_1
+        )
+
+        self.simple_track_3 = Track.objects.create(
+            track_type='track',
+            track_name='Future',
+            artist="Nils Petter Molvær, Moritz von Oswald",
+            album_name="1/1",
+            created_by=self.user_1
+        )
+
+        self.simple_streaming_link_3 = StreamingLink.objects.create(
+            track = self.simple_track_3,
+            streaming_platform='youtube',
+            streaming_link = 'https://www.youtube.com/watch?v=V4tc_r4O_6k&list=LL&index=2',
+            added_by = self.user_1
+        )
+
+        self.playlist_track_3 = PlaylistTrack.objects.create(
+            playlist=self.test_playlist,
+            track=self.simple_track_3,
+            added_by=self.user_1
+        )
+
 
 class CreatePlaylistTest(BaseTestCase):
     '''
@@ -139,7 +189,7 @@ class ViewTracksInPlaylist(BaseTestCase):
     '''
     Test cases:
         - positive:
-            - if n tracks are added to the playlist,  count(list_of_tracks) = n
+            - if n tracks are added to the playlist,  count(list_of_playlist_tracks) = n
             - the correct playlist is retrieved, via playlist_name + user
             - check the correct values are displayed in the correpsonding fields
             - track ordering
@@ -157,18 +207,6 @@ class ViewTracksInPlaylist(BaseTestCase):
             added_by = self.user_1
         )
 
-        PlaylistTrack.objects.create(
-            playlist=self.test_playlist,
-            track=self.simple_track_1,
-            added_by=self.user_1
-        )
-
-        PlaylistTrack.objects.create(
-            playlist=self.test_playlist,
-            track=self.simple_track_2,
-            added_by=self.user_1
-        )
-
     def test_view_playlist_track_positive(self):
         '''
         
@@ -184,12 +222,12 @@ class ViewTracksInPlaylist(BaseTestCase):
 
         #Access individual context variables
         playlist_name = context['playlist_name']
-        list_of_tracks = context['list_of_tracks']
+        list_of_playlist_tracks = context['list_of_playlist_tracks']
 
         self.assertEqual(playlist_name, self.test_playlist.playlist_name)
-        self.assertEqual(len(list_of_tracks), 2)
-        self.assertEqual(list_of_tracks[0]['track_name'], 'Another Life')
-        self.assertEqual(list_of_tracks[1]['artist'], "Noel Gallagher's High Flying Birds")
+        self.assertEqual(len(list_of_playlist_tracks), 3)
+        self.assertEqual(list_of_playlist_tracks[0]['track_name'], 'Another Life')
+        self.assertEqual(list_of_playlist_tracks[1]['artist'], "Noel Gallagher's High Flying Birds")
 
     
     def test_view_playlist_empty(self):
@@ -203,8 +241,8 @@ class ViewTracksInPlaylist(BaseTestCase):
         context = response.context
 
         #Access individual context variables
-        list_of_tracks = context['list_of_tracks']
-        self.assertEqual(len(list_of_tracks), 0)
+        list_of_playlist_tracks = context['list_of_playlist_tracks']
+        self.assertEqual(len(list_of_playlist_tracks), 0)
 
 
 class AddLinkToTrackTest(BaseTestCase):
@@ -282,6 +320,225 @@ class AddLinkToTrackTest(BaseTestCase):
         self.assertIsNotNone(meta_data_dictionary)
         self.assertEqual(meta_data_dictionary['track_name'], self.simple_track_2.track_name)
         self.assertEqual(meta_data_dictionary['streaming_platform'], self.simple_streaming_link_2.streaming_platform)
+
+
+class DeletePlaylistTest(BaseTestCase):
+    def test_unauthorised_user(self):
+        #Generate url
+        url = reverse("delete_playlists",args=[self.bad_user.username,])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_id': [self.test_playlist.id]}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_wrong_http_method(self):
+        #Login
+        self.client.force_login(self.user_1)
+        
+        #Generate url
+        url = reverse("delete_playlists",args=[self.user_1.username])
+
+        #Generate response
+        response = self.client.post(
+            url,
+            data=json.dumps({'playlist_id': [self.test_playlist.id]}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 405)
+
+    def test_delete_playlist_positive(self):
+        #Login
+        self.client.force_login(self.user_1)
+        
+        #Generate url
+        url = reverse("delete_playlists",args=[self.user_1.username])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_id': [self.test_playlist.id]}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        #Retrieve playlist and check is_deleted
+        playlist=Playlist.objects.get(id=self.test_playlist.id)
+        playlist_is_deleted_status = playlist.is_deleted
+        self.assertTrue(playlist_is_deleted_status)
+
+    def test_delete_multiple_playlists_positive(self):
+        #Login
+        self.client.force_login(self.user_1)
+
+        #Generate url
+        url = reverse("delete_playlists", args=[self.user_1.username])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_id': [self.test_playlist.id, self.wip_playlist.id]}),
+            content_type='application/json'
+        )
+
+        #Retrieve playlist and check is_deleted
+        playlist=Playlist.objects.get(id=self.wip_playlist.id)
+        playlist_is_deleted_status = playlist.is_deleted
+        self.assertTrue(playlist_is_deleted_status)
+
+    def test_empty_playlist_ids(self):
+        #Login
+        self.client.force_login(self.user_1)
+
+        #Generate url
+        url = reverse("delete_playlists", args=[self.user_1.username])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_id': []}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_user_deletes_other_user_playlist(self):
+        #Login
+        self.client.force_login(self.bad_user)
+
+        #Generate url
+        url = reverse("delete_playlists",args=[self.bad_user.username])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_id': [self.wip_playlist.id]}),
+            content_type='application/json'
+        )
+
+        #Confirm there is no error
+        self.assertEqual(response.status_code, 200)
+
+        #Confirm 0 rows updated
+        data = json.loads(response.content)
+        self.assertEqual(data['deleted_count'], 0)
+
+        #Confirm wip_playlist still exists
+        playlist=Playlist.objects.get(id=self.wip_playlist.id)
+        playlist_is_deleted_status = playlist.is_deleted
+        self.assertFalse(playlist_is_deleted_status)
+
+
+class DeletePlaylistTracksTest(BaseTestCase):
+    def test_unauthorised_user(self):
+        #Generate url
+        url = reverse("delete_playlist_tracks",args=[self.bad_user.username, self.test_playlist.playlist_name])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_track_id': [self.playlist_track_1.id]}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_wrong_http_method(self):
+        #Login
+        self.client.force_login(self.user_1)
+        
+        #Generate url
+        url = reverse("delete_playlist_tracks",args=[self.user_1.username, self.test_playlist.playlist_name])
+
+        #Generate response
+        response = self.client.post(
+            url,
+            data=json.dumps({'playlist_track_id': [self.playlist_track_1.id]}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 405)
+
+    def test_delete_playlist_tracks_positive(self):
+        #Login
+        self.client.force_login(self.user_1)
+        
+        #Generate url
+        url = reverse("delete_playlist_tracks",args=[self.user_1.username, self.test_playlist.playlist_name])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_track_id': [self.playlist_track_1.id]}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        #Retrieve playlist_track and check is_deleted
+        playlist_track=PlaylistTrack.objects.get(id=self.playlist_track_1.id)
+        playlist_track_is_deleted_status = playlist_track.is_deleted
+        self.assertTrue(playlist_track_is_deleted_status)
+
+    def test_delete_multiple_playlist_tracks_positive(self):
+        #Login
+        self.client.force_login(self.user_1)
+
+        #Generate url
+        url = reverse("delete_playlist_tracks",args=[self.user_1.username, self.test_playlist.playlist_name])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_track_id': [self.playlist_track_1.id, self.playlist_track_2.id]}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        #Retrieve playlist and check is_deleted
+        playlist_track_2=PlaylistTrack.objects.get(id=self.playlist_track_2.id)
+        playlist_track_is_deleted_status = playlist_track_2.is_deleted
+        self.assertTrue(playlist_track_is_deleted_status)
+
+    def test_empty_playlist_track_ids(self):
+        #Login
+        self.client.force_login(self.user_1)
+
+        #Generate url
+        url = reverse("delete_playlist_tracks",args=[self.user_1.username, self.test_playlist.playlist_name])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_track_id': []}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_user_deletes_other_user_playlist_track(self):
+        #Login
+        self.client.force_login(self.bad_user)
+
+        #Generate url
+        url = reverse("delete_playlist_tracks",args=[self.bad_user.username, self.test_playlist.playlist_name])
+
+        #Generate response
+        response = self.client.delete(
+            url,
+            data=json.dumps({'playlist_track_id': [self.playlist_track_1.id]}),
+            content_type='application/json'
+        )
+
+        #Confirm there is no error
+        self.assertEqual(response.status_code, 200)
+
+        #Confirm 0 rows updated
+        data = json.loads(response.content)
+        self.assertEqual(data['deleted_count'], 0)
+
+        #Confirm wip_playlist still exists
+        playlist_track=PlaylistTrack.objects.get(id=self.playlist_track_1.id)
+        playlist_track_is_deleted_status = playlist_track.is_deleted
+        self.assertFalse(playlist_track_is_deleted_status)
 
 
 def tearDown(self):

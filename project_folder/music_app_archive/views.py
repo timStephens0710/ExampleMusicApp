@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect, get_object_or_404
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http.response import HttpResponseRedirect
-from django.urls import reverse
 from django.db import IntegrityError, transaction
-
+from django.http.response import HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.views.decorators.http import require_http_methods
 
 from .models import *
 from music_app_auth.models import AppLogging
@@ -477,7 +479,8 @@ def view_edit_playlist(request, username, playlist_name):
 
     #2. Get relevant PlaylistTrack from the model, along with Track + StreamingLink meta data
     playlist_tracks = PlaylistTrack.objects.filter(
-        playlist=playlist
+        playlist=playlist,
+        is_deleted=False
         ).select_related(
             'track',
             'added_by'
@@ -486,7 +489,7 @@ def view_edit_playlist(request, username, playlist_name):
         ).order_by('position')
     
     #3. Build list for track data
-    list_of_tracks = []
+    list_of_playlist_tracks = []
 
     for playlist_track in playlist_tracks:
         try:
@@ -496,7 +499,8 @@ def view_edit_playlist(request, username, playlist_name):
             streaming_links = list(track.streaming_links.all())
 
             #Create dictionary to pass through context
-            track_data = {
+            playlist_track_data = {
+                'id': playlist_track.id,
                 'position': playlist_track.position,
                 'track_id': track.id,
                 'track_name': track.track_name,
@@ -521,8 +525,8 @@ def view_edit_playlist(request, username, playlist_name):
                 'link': streaming_links[0].streaming_link if streaming_links else '#',
             }
 
-            #Append track_data to list_of_tracks
-            list_of_tracks.append(track_data)
+            #Append playlist_track_data to list_of_playlist_tracks
+            list_of_playlist_tracks.append(playlist_track_data)
         except Exception as e:
             #Skip current track and move onto the next one
             logger.error(f"Error processing track in playlist {playlist_name}: {e}")
@@ -532,7 +536,64 @@ def view_edit_playlist(request, username, playlist_name):
         'user_id': user_id,
         'username': username, 
         'playlist_name': playlist_name,
-        'list_of_tracks': list_of_tracks
+        'list_of_playlist_tracks': list_of_playlist_tracks
     }
     return render(request, 'view_edit_playlist.html', context)
 
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_playlists(request, username):
+    '''
+    Allows the user to delete one or more playlists
+    '''
+    #Get the user instance via username
+    user = get_object_or_404(CustomUser, username=username)
+    if user != request.user:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    #Retrieve the playlist_ids from the json response
+    data = json.loads(request.body)
+    playlist_ids_to_be_deleted = data.get('playlist_id', [])
+
+    if not playlist_ids_to_be_deleted:
+        logger.info(f"playlist_ids_to_be_deleted is empty for {username}")
+        return JsonResponse({'success': False, 'error': 'empty playlist_ids_to_be_deleted'}, status=400)
+    try:
+        #Get the relevant playlists and update is_deleted = True
+        updated=Playlist.objects.filter(owner=request.user.id, id__in=playlist_ids_to_be_deleted).update(is_deleted=True)
+        logger.info(f"The following playlists by {username} have been deleted: {playlist_ids_to_be_deleted}")
+        return JsonResponse({'success':True, 'deleted_count': updated})
+    except Exception as e:
+        # Unexpected error
+        logger.exception(f"Unexpected error deleting playlist(s): {playlist_ids_to_be_deleted}: {e}")
+        return JsonResponse({'success': False, 'error': 'unexpected error'}, status=400)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_playlist_tracks(request, username, playlist_name):
+    '''
+    Allows the user to delete one or more tracks from a playlist.
+    '''
+    #Get the user instance via username
+    user = get_object_or_404(CustomUser, username=username)
+    if user != request.user:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    #Retrieve the playlist_track_id from the json response
+    data = json.loads(request.body)
+    playlist_track_ids_to_be_deleted = data.get('playlist_track_id', [])
+
+    if not playlist_track_ids_to_be_deleted:
+        logger.info(f"playlist_track_ids_to_be_deleted is empty for {username}")
+        return JsonResponse({'success': False, 'error': 'empty playlist_track_ids_to_be_deleted'}, status=400)
+    try:
+        #Get the relevant tracks and update is_deleted = True
+        updated=PlaylistTrack.objects.filter(playlist__owner=request.user.id, id__in=playlist_track_ids_to_be_deleted).update(is_deleted=True)
+        logger.info(f"The following tracks from {playlist_name} by {username} have been deleted: {playlist_track_ids_to_be_deleted}")
+        return JsonResponse({'success':True, 'deleted_count': updated})
+    except Exception as e:
+        # Unexpected error
+        logger.exception(f"Unexpected error deleting track(s) in {playlist_name}: {playlist_track_ids_to_be_deleted}: {e}")
+        return JsonResponse({'success': False, 'error': 'unexpected error'}, status=400)

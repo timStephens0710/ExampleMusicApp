@@ -9,7 +9,7 @@ export default defineConfig({
     // Output directly to Django's static directory
     outDir: path.resolve(__dirname, '../static/music_app/js'),
     emptyOutDir: false,
-    sourcemap: true,
+    sourcemap: true, //Keeping this here for developemnt - helps with debugging 
     
     // Library mode - build individual TypeScript files
     rollupOptions: {
@@ -20,6 +20,8 @@ export default defineConfig({
         validatePassword: path.resolve(__dirname, './src/validatePassword.ts'),
         validateStreamingLink: path.resolve(__dirname, './src/validateStreamingLink.ts'),
         dynamicAddTrackForm: path.resolve(__dirname, './src/dynamicAddTrackForm.ts'),
+        deletePlaylists: path.resolve(__dirname, './src/deletePlaylists.ts'),
+        deletePlaylistTracks: path.resolve(__dirname, './src/deletePlaylistTracks.ts'),
       },
       output: {
         entryFileNames: '[name].js',

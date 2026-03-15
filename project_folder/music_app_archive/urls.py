@@ -22,13 +22,14 @@ from django.conf.urls.static import static
 from . import views
 
 
-urlpatterns = [
+urlpatterns=[
     path('admin/', admin.site.urls)
-    ,path('profile/<str:username>/', views.user_profile, name = 'user_profile')
-    ,path('<str:username>/your_playlists/', views.user_playlists, name = 'user_playlists') #display of all the user's playlists
-    ,path('<str:username>/create_playlist/', views.create_playlist, name = 'create_playlist') #create or update playlist
-    ,path('<str:username>/<str:playlist_name>/', views.view_edit_playlist, name = 'view_edit_playlist') #view specific playlist
-    ,path('<str:username>/<str:playlist_name>/add_link_to_track', views.add_streaming_link_to_playlist, name = 'add_streaming_link_to_playlist') #add track to a specific playlist
-    ,path('<str:username>/<str:playlist_name>/add_track', views.add_track_to_playlist, name = 'add_track_to_playlist') #add track to a specific playlist
-
+    ,path('profile/<str:username>/', views.user_profile, name='user_profile')
+    ,path('<str:username>/your_playlists/', views.user_playlists, name='user_playlists') #display of all the user's playlists
+    ,path('<str:username>/create_playlist/', views.create_playlist, name='create_playlist') #create or update playlist
+    ,path('<str:username>/your_playlists/delete_playlists/', views.delete_playlists, name='delete_playlists') #view delete_playlists
+    ,path('<str:username>/<str:playlist_name>/', views.view_edit_playlist, name='view_edit_playlist') #view specific playlist
+    ,path('<str:username>/<str:playlist_name>/delete_playlist_tracks/', views.delete_playlist_tracks, name='delete_playlist_tracks') #view delete_playlist_tracks
+    ,path('<str:username>/<str:playlist_name>/add_link_to_track/', views.add_streaming_link_to_playlist, name='add_streaming_link_to_playlist') #add track to a specific playlist
+    ,path('<str:username>/<str:playlist_name>/add_track/', views.add_track_to_playlist, name='add_track_to_playlist') #add track to a specific playlist
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
