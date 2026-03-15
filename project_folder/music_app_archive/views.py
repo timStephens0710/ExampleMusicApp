@@ -543,7 +543,7 @@ def view_edit_playlist(request, username, playlist_name):
 @require_http_methods(["DELETE"])
 def delete_playlists(request, username):
     '''
-    allows the user to delete one or more playlists
+    Allows the user to delete one or more playlists
     '''
     #Get the user instance via username
     user = get_object_or_404(CustomUser, username=username)
@@ -565,4 +565,33 @@ def delete_playlists(request, username):
     except Exception as e:
         # Unexpected error
         logger.exception(f"Unexpected error deleting playlist(s): {playlist_ids_to_be_deleted}: {e}")
+        return JsonResponse({'success': False, 'error': 'unexpected error'}, status=400)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_playlist_tracks(request, username, playlist_name):
+    '''
+    Allows the user to delete one or more tracks from a playlist.
+    '''
+    #Get the user instance via username
+    user = get_object_or_404(CustomUser, username=username)
+    if user != request.user:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    #Retrieve the playlist_track_id from the json response
+    data = json.loads(request.body)
+    playlist_track_ids_to_be_deleted = data.get('playlist_track_id', [])
+
+    if not playlist_track_ids_to_be_deleted:
+        logger.info(f"playlist_track_ids_to_be_deleted is empty for {username}")
+        return JsonResponse({'success': False, 'error': 'empty playlist_track_ids_to_be_deleted'}, status=400)
+    try:
+        #Get the relevant tracks and update is_deleted = True
+        updated=PlaylistTrack.objects.filter(playlist__owner=user, id__in=playlist_track_ids_to_be_deleted).update(is_deleted=True)
+        logger.info(f"The following tracks by {username} have been deleted: {playlist_track_ids_to_be_deleted}")
+        return JsonResponse({'success':True, 'deleted_count': updated})
+    except Exception as e:
+        # Unexpected error
+        logger.exception(f"Unexpected error deleting track(s): {playlist_track_ids_to_be_deleted}: {e}")
         return JsonResponse({'success': False, 'error': 'unexpected error'}, status=400)
