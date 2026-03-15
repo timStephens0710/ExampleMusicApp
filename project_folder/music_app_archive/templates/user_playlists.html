@@ -62,8 +62,8 @@
 </div>
 <div>
         <button id="edit-playlists-btn" class="btn-action">Edit Playlists</button>
-        <button id="delete-playlists-btn" class="btn btn-danger d-none">Delete</button>
-        <button id="cancel-edit-btn" class="btn btn-secondary d-none">Cancel</button>
+        <button id="delete-playlists-btn" class="btn-delete d-none">Delete</button>
+        <button id="cancel-edit-btn" class="btn-cancel d-none">Cancel</button>
 </div>
 
 <script src="{% static 'music_app/js/deletePlaylists.js' %}" defer></script>
@@ -83,8 +83,8 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" data-delete-url="{% url 'delete_playlists' request.user.username %}" id="confirm-delete-btn">Delete</button>
+        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn-delete" data-delete-url="{% url 'delete_playlists' request.user.username %}" id="confirm-delete-btn">Delete</button>
       </div>
 
     </div>

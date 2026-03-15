@@ -141,3 +141,37 @@ authentication process.*/
 .btn-action:hover {
     color: #66F523;
 }
+
+/* Delete button - used for Delete Playlists, Delete Tracks  */
+.btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #ccc;             /* Tailwind Red 500 */
+    font-size: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.btn-delete:hover {
+    color: #dc2626;             /* Tailwind Red 600 - darker on hover */
+}
+
+/* Cancel button - used for Cancel Edit Playlists, Cancel Edit Tracks */
+.btn-cancel {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #ccc;             /* Tailwind Gray 400 */
+    font-size: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.btn-cancel:hover {
+    color: #66F523;
+}
