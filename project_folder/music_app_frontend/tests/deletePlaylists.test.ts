@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { init } from '../src/deletePlaylists';
 
-// ─── Mock bootstrap ──────────────────────────────────────────────────────────
+// ─── Mock bootstrap as a global ──────────────────────────────────────────────
 
 const mockShow = vi.fn();
 const mockHide = vi.fn();
 
-vi.mock('bootstrap', () => ({
+vi.stubGlobal('bootstrap', {
     Modal: vi.fn().mockImplementation(function(this: any) {
         this.show = mockShow;
         this.hide = mockHide;
     }),
-}));
+});
 
 // ─── Mock fetch ───────────────────────────────────────────────────────────────
 
@@ -45,7 +45,11 @@ function buildDOM(): void {
         <button id="delete-playlists-btn" class="d-none">Delete</button>
         <button id="cancel-edit-btn" class="d-none">Cancel</button>
         <div id="confirmDeleteModal">
-            <button id="confirm-delete-btn">Delete</button>
+            <button 
+                id="confirm-delete-btn"
+                data-delete-url="/test1/your_playlists/delete_playlists/">
+                Delete
+            </button>
         </div>`;
 }
 
@@ -56,6 +60,12 @@ describe('delete_playlists.ts', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.stubGlobal('fetch', mockFetch);
+        vi.stubGlobal('bootstrap', {
+            Modal: vi.fn().mockImplementation(function(this: any) {
+                this.show = mockShow;
+                this.hide = mockHide;
+            }),
+        });
         Object.defineProperty(document, 'cookie', {
             writable: true,
             value: 'csrftoken=testcsrftoken123',
@@ -166,7 +176,7 @@ describe('delete_playlists.ts', () => {
             await vi.waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
 
             const [url, options] = mockFetch.mock.calls[0];
-            expect(url).toContain('/your_playlists/delete_playlists');
+            expect(url).toContain('/your_playlists/delete_playlists/');
             expect(options.method).toBe('DELETE');
             expect(options.headers['Content-Type']).toBe('application/json');
             expect(options.headers['X-CSRFToken']).toBe('testcsrftoken123');
@@ -181,7 +191,7 @@ describe('delete_playlists.ts', () => {
             const reloadMock = vi.fn();
             vi.stubGlobal('location', {
                 ...window.location,
-                pathname: '/simple_john/your_playlists/',
+                pathname: '/music_app_archive/test1/your_playlists/',
                 reload: reloadMock,
             });
 
@@ -207,7 +217,7 @@ describe('delete_playlists.ts', () => {
             const reloadMock = vi.fn();
             vi.stubGlobal('location', {
                 ...window.location,
-                pathname: '/simple_john/your_playlists/',
+                pathname: '/music_app_archive/test1/your_playlists/',
                 reload: reloadMock,
             });
 
