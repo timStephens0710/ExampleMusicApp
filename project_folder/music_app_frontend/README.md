@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is the frontend TypeScript workspace for a music archiving tool built with Django and TypeScript. The project provides comprehensive client-side validation, form handling, and user interface interactions for managing music playlists, tracks, and user authentication.
+This is the frontend TypeScript workspace for a music archiving tool built with Django and TypeScript. The project provides comprehensive client-side validation, form handling, user interface interactions, and deletion workflows for managing music playlists, tracks, and user authentication.
 
 ## Project Structure
 
@@ -15,13 +15,19 @@ music_app_frontend/
 │   ├── validateStreamingLink.ts
 │   ├── validateAddTrackForm.ts
 │   ├── showPassword.ts
+│   ├── dynamicAddTrackForm.ts
+│   ├── deletePlaylists.ts          
+│   ├── deletePlaylistTracks.ts      
 │   ├── musicAppAuth.ts
 │   └── musicAppPlaylist.ts
 ├── tests/                 # Vitest test suite
 │   ├── emailValidator.test.ts
 │   ├── validatePassword.test.ts
 │   ├── validateStreamingLink.test.ts
-│   └── validateAddTrackForm.test.ts
+│   ├── validateAddTrackForm.test.ts
+│   ├── dynamicAddTrackForm.test.ts
+│   ├── deletePlaylists.test.ts         # Playlist deletion tests
+│   └── deletePlaylistTracks.test.ts    # Track deletion tests
 ├── package.json           # NPM dependencies and scripts
 ├── package-lock.json      # Locked dependency versions
 ├── tsconfig.json          # TypeScript compiler configuration
@@ -36,6 +42,7 @@ music_app_frontend/
 - **Django** - Python web framework (backend integration)
 - **Vite** - Next-generation frontend build tool
 - **Vitest** - Fast unit testing framework
+- **Bootstrap 5** - UI framework (modals, utilities)
 
 ### Development Tools
 - **Node.js** - JavaScript runtime
@@ -49,6 +56,7 @@ music_app_frontend/
 - Node.js 16+ 
 - NPM 8+
 - Python 3.8+ (for Django backend)
+- Bootstrap 5.x (for modal functionality)
 
 ### Installation
 
@@ -122,7 +130,7 @@ Test framework configuration:
 - Coverage settings
 - Test file patterns
 - Setup files
-- Mock configurations
+- Mock configurations (Bootstrap, fetch API)
 
 ### `package.json`
 Project metadata and dependencies:
@@ -133,7 +141,7 @@ Project metadata and dependencies:
 
 ## Source Code (`src/`)
 
-The source directory contains all TypeScript modules for client-side validation and user interactions. Each module is focused on a specific concern:
+The source directory contains all TypeScript modules for client-side validation, user interactions, and deletion workflows. Each module is focused on a specific concern:
 
 ### Validation Modules
 - **validateEmail.ts** - Email format validation
@@ -144,6 +152,10 @@ The source directory contains all TypeScript modules for client-side validation 
 ### UI Modules
 - **showPassword.ts** - Toggle password visibility
 - **dynamicAddTrackForm.ts** - Dynamically change addTrack form depending on track type
+
+### Deletion Modules
+- **deletePlaylists.ts** - Multi-select playlist deletion with confirmation modal
+- **deletePlaylistTracks.ts** - Multi-select track deletion within playlists
 
 ### Type Definitions
 - **musicAppAuth.ts** - Authentication form interfaces
@@ -156,6 +168,9 @@ The source directory contains all TypeScript modules for client-side validation 
 Comprehensive test suite using Vitest covering:
 - Unit tests for all validation functions
 - DOM integration tests for form handling
+- Deletion workflow tests (UI state, modals, API requests)
+- Bootstrap Modal mocking
+- Fetch API mocking
 - Edge case testing
 - ~95% code coverage
 
@@ -171,7 +186,7 @@ Comprehensive test suite using Vitest covering:
 
 ### Django Template Integration
 
-**HTML Structure Required**:
+**Validation Forms**:
 ```html
 <!-- Django template -->
 <form id="auth-form" method="post">
@@ -198,6 +213,55 @@ Comprehensive test suite using Vitest covering:
 <script type="module" src="{% static 'js/bundle.js' %}"></script>
 ```
 
+**Deletion UI**:
+```html
+<!-- Playlist deletion UI -->
+<button id="edit-playlists-btn">Edit Playlists</button>
+<button id="delete-playlists-btn" class="d-none">Delete Selected</button>
+<button id="cancel-edit-btn" class="d-none">Cancel</button>
+
+<table>
+  <thead>
+    <tr>
+      <th class="checkbox-header d-none"></th>
+      <th>Playlist Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr data-playlist-id="1">
+      <td class="playlist-checkbox-cell d-none">
+        <input type="checkbox">
+      </td>
+      <td>Summer Vibes</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="confirmDeleteModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Confirm Deletion</h5>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete the selected items?
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="confirm-delete-btn" 
+                data-delete-url="{% url 'delete_playlists' username %}">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Load deletion module -->
+<script type="module" src="{% static 'js/deletePlaylists.js' %}"></script>
+```
+
 ### Form Validation Flow
 1. User fills out Django form
 2. User clicks submit
@@ -209,6 +273,16 @@ Comprehensive test suite using Vitest covering:
    - Form submits to Django backend
    - Django performs server-side validation
    - Database operations proceed
+
+### Deletion Workflow
+1. User clicks "Edit" button
+2. Checkboxes appear for item selection
+3. User selects items and clicks "Delete"
+4. Bootstrap modal appears for confirmation
+5. User confirms deletion
+6. TypeScript sends DELETE request to Django with CSRF token
+7. Django processes deletion (soft-delete)
+8. Page reloads to show updated list
 
 ## Development Guidelines
 
@@ -258,6 +332,46 @@ describe('validateField', () => {
 
 4. **Update documentation** in relevant README files
 
+### Adding New Deletion Workflows
+
+1. **Create module** in `src/`:
+```typescript
+export function init(): void {
+    const editBtn = document.querySelector<HTMLButtonElement>('#edit-btn');
+    const deleteBtn = document.querySelector<HTMLButtonElement>('#delete-btn');
+    const confirmBtn = document.querySelector<HTMLButtonElement>('#confirm-delete-btn');
+    
+    // Implement workflow...
+}
+
+document.addEventListener('DOMContentLoaded', init);
+```
+
+2. **Add tests** in `tests/`:
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { init } from '../src/deleteModule';
+
+describe('Delete workflow', () => {
+    beforeEach(() => {
+        // Mock DOM
+        // Mock Bootstrap
+        // Mock fetch
+        init();
+    });
+    
+    it('shows modal on delete click', () => {
+        // Test implementation
+    });
+});
+```
+
+3. **Integrate with Django**:
+   - Create DELETE view in Django
+   - Add URL pattern
+   - Update template with required HTML structure
+   - Load compiled module in template
+
 ### Code Style
 
 - Use TypeScript strict mode
@@ -266,6 +380,8 @@ describe('validateField', () => {
 - Comment complex logic
 - Export functions that may be reused
 - Keep functions small and focused (single responsibility)
+- Use Set for tracking unique IDs
+- Handle missing DOM elements gracefully
 
 ### Testing Standards
 
@@ -274,12 +390,16 @@ describe('validateField', () => {
 - One assertion focus per test (generally)
 - Use descriptive test names
 - Mock DOM elements for integration tests
+- Mock external dependencies (Bootstrap, fetch, location)
 - Aim for >80% code coverage
+- Test async flows with `vi.waitFor()`
 
 ## Dependencies
 
 ### Production Dependencies
 Currently no runtime dependencies - vanilla TypeScript with browser APIs
+
+**Note**: Bootstrap 5 is expected to be loaded separately by Django templates
 
 ### Development Dependencies
 - **typescript** - TypeScript compiler
@@ -287,6 +407,7 @@ Currently no runtime dependencies - vanilla TypeScript with browser APIs
 - **vitest** - Testing framework
 - **@vitest/ui** - Visual test runner
 - **jsdom** - DOM implementation for testing
+- **@testing-library/jest-dom** - Enhanced DOM matchers
 
 ## Building for Production
 
@@ -305,6 +426,21 @@ Vite automatically handles:
 
 ### Output
 Built files are placed in `dist/` (or Django `static/` directory based on configuration)
+
+### Conditional Module Loading
+Load deletion modules only on pages that need them:
+
+```html
+<!-- user_playlists page -->
+{% if playlists %}
+  <script type="module" src="{% static 'js/deletePlaylists.js' %}"></script>
+{% endif %}
+
+<!-- view_edit_playlist page -->
+{% if playlist_tracks %}
+  <script type="module" src="{% static 'js/deletePlaylistTracks.js' %}"></script>
+{% endif %}
+```
 
 ## Troubleshooting
 
@@ -334,14 +470,63 @@ npm install
 - Verify file exists in `src/`
 - Ensure no circular dependencies
 
+**Bootstrap Modal not working**:
+- Ensure Bootstrap JavaScript is loaded before your modules
+- Check console for `bootstrap is not defined` errors
+- Verify modal HTML structure matches Bootstrap 5 requirements
+
+**DELETE request fails**:
+- Check CSRF token is being extracted correctly from cookies
+- Verify Django view accepts DELETE method
+- Check `data-delete-url` attribute is set correctly
+- Ensure user has permission to delete items
+
+**Page doesn't reload after deletion**:
+- Check Django response includes `"success": true`
+- Verify fetch promise is resolving correctly
+- Check browser console for JavaScript errors
+
+## Security Considerations
+
+### CSRF Protection
+All DELETE requests include Django's CSRF token:
+```typescript
+const csrfToken = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='))
+    ?.split('=')[1] ?? '';
+
+fetch(url, {
+    headers: {
+        'X-CSRFToken': csrfToken
+    }
+});
+```
+
+### Client-Side Validation
+- Client-side validation improves UX but is NOT a security measure
+- All validation is duplicated on Django backend
+- Never trust client-side data alone
+
+### User Confirmation
+- Deletion actions require explicit modal confirmation
+- Prevents accidental data loss
+- Clear visual feedback during workflow
+
 ## Future Enhancements
 
 ### Planned Features
-- [ ] Add SoundCloud and Nina Protocol support
+- [ ] Add SoundCloud support
+- [ ] Refactor deletePlaylists and deletePlaylistTracks into one module
 - [ ] Real-time validation (on blur/input events)
 - [ ] Password strength meter visualization
 - [ ] Internationalization (i18n) for error messages
 - [ ] Accessibility improvements (ARIA labels, screen reader support)
+- [ ] Undo functionality for deletions
+- [ ] Loading states during API requests
+- [ ] Optimistic UI updates
+- [ ] Keyboard shortcuts for deletion workflow
+- [ ] Batch operation progress indicators
 
 ### Technical Improvements
 - [ ] Add ESLint and Prettier
@@ -350,6 +535,8 @@ npm install
 - [ ] Implement bundle size analysis
 - [ ] Add performance monitoring
 - [ ] Create Storybook component documentation
+- [ ] Add mutation testing for test suite quality
+- [ ] Implement service worker for offline support
 
 ## Contributing
 
@@ -374,20 +561,31 @@ footer (optional)
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
+Examples:
+```
+feat(deletion): add playlist deletion workflow
+test(deletion): add comprehensive deletion tests
+docs(readme): update with deletion module documentation
+```
+
 ## Project Goals
 
 This frontend workspace serves as a learning project focused on:
 1. **TypeScript Fundamentals** - Types, interfaces, generics, strict mode
 2. **DOM Manipulation** - Event listeners, form handling, dynamic content
-3. **Testing** - Unit tests, integration tests, TDD practices
+3. **Testing** - Unit tests, integration tests, TDD practices, mocking
 4. **Build Tools** - Modern bundling with Vite
 5. **Django Integration** - Seamless backend/frontend communication
+6. **RESTful APIs** - DELETE requests, CSRF protection, JSON payloads
+7. **UI/UX Patterns** - Modal dialogs, confirmation flows, state management
+8. **Bootstrap Integration** - Modal component usage, utility classes
 
 
 ---
 
 **Project Type**: Learning project / Portfolio piece  
 **Status**: Active development  
-**Last Updated**: January 2026  
+**Last Updated**: March 2026  
 **Node Version**: 16+  
-**TypeScript Version**: 4.x+
+**TypeScript Version**: 4.x+  
+**Bootstrap Version**: 5.x+
