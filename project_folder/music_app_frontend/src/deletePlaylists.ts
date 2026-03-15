@@ -1,4 +1,4 @@
-import * as bootstrap from 'bootstrap';
+declare const bootstrap: any;
 /*
     * Allow the user to delete playlist(s)
     * When the user clicks the "Edit" button:
@@ -13,28 +13,38 @@ import * as bootstrap from 'bootstrap';
 */
 
 export function init(): void {
+    //Declare const HTML variables
     const editBtn = document.querySelector<HTMLButtonElement>('#edit-playlists-btn');
     const deleteBtn = document.querySelector<HTMLButtonElement>('#delete-playlists-btn');
     const cancelBtn = document.querySelector<HTMLButtonElement>('#cancel-edit-btn');
     const checkboxCells = document.querySelectorAll<HTMLElement>('.playlist-checkbox-cell');
     const checkboxHeader = document.querySelector<HTMLElement>('.checkbox-header');
     const confirmDeleteBtn = document.querySelector<HTMLButtonElement>('#confirm-delete-btn');
+    const modalElement = document.getElementById('confirmDeleteModal');
 
-    if (!editBtn || !deleteBtn || !cancelBtn || !confirmDeleteBtn || !checkboxHeader) {
-        console.warn('Delete playlist: required elements not found');
+    //Check that all const exist
+    if (!editBtn || !deleteBtn || !cancelBtn || !checkboxCells || !checkboxHeader || !confirmDeleteBtn || !modalElement) {
+        console.warn("Required elements not found:", {
+            editBtn: !!editBtn,
+            deleteBtn: !!deleteBtn,
+            cancelBtn: !!cancelBtn,
+            checkboxCells: !!checkboxCells,
+            checkboxHeader: !!checkboxHeader,
+            confirmDeleteBtn: !!confirmDeleteBtn,
+            modalElement: !!modalElement
+        });
         return;
     }
 
+    //Define additional variables
     const selectedPlaylistIds = new Set<number>();
-
-    const modalElement = document.getElementById('confirmDeleteModal');
     const modal = modalElement ? new bootstrap.Modal(modalElement) : null;
-
     const csrfToken = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1] ?? '';
 
+    //Edit button actions
     editBtn.addEventListener('click', (): void => {
         checkboxHeader.classList.remove('d-none');
         checkboxCells.forEach((field: HTMLElement): void => {
@@ -45,6 +55,7 @@ export function init(): void {
         editBtn.classList.add('d-none');
     });
 
+    //Cancel button actions
     cancelBtn.addEventListener('click', (): void => {
         checkboxHeader.classList.add('d-none');
         checkboxCells.forEach((cell: HTMLElement): void => {
@@ -57,6 +68,7 @@ export function init(): void {
         editBtn.classList.remove('d-none');
     });
 
+    //Delete button actions
     deleteBtn.addEventListener('click', (): void => {
         selectedPlaylistIds.clear();
         checkboxCells.forEach((cell: HTMLElement): void => {
@@ -70,12 +82,12 @@ export function init(): void {
         modal?.show();
     });
 
+    //Confirm delete button actions
     confirmDeleteBtn.addEventListener('click', (): void => {
-        const urlPathSegments = window.location.pathname.split('/');
-        const username = urlPathSegments[1];
         const payload = JSON.stringify({ playlist_id: [...selectedPlaylistIds] });
+        const deleteUrl = confirmDeleteBtn.dataset.deleteUrl ?? '';
 
-        fetch(`/${username}/your_playlists/delete_playlists`, {
+        fetch(deleteUrl, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
