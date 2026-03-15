@@ -9,7 +9,7 @@ export default defineConfig({
     // Output directly to Django's static directory
     outDir: path.resolve(__dirname, '../static/music_app/js'),
     emptyOutDir: false,
-    sourcemap: true,
+    sourcemap: true, //Keeping this here for developemnt - helps with debugging 
     
     // Library mode - build individual TypeScript files
     rollupOptions: {
