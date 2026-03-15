@@ -189,7 +189,7 @@ class ViewTracksInPlaylist(BaseTestCase):
     '''
     Test cases:
         - positive:
-            - if n tracks are added to the playlist,  count(list_of_tracks) = n
+            - if n tracks are added to the playlist,  count(list_of_playlist_tracks) = n
             - the correct playlist is retrieved, via playlist_name + user
             - check the correct values are displayed in the correpsonding fields
             - track ordering
@@ -222,12 +222,12 @@ class ViewTracksInPlaylist(BaseTestCase):
 
         #Access individual context variables
         playlist_name = context['playlist_name']
-        list_of_tracks = context['list_of_tracks']
+        list_of_playlist_tracks = context['list_of_playlist_tracks']
 
         self.assertEqual(playlist_name, self.test_playlist.playlist_name)
-        self.assertEqual(len(list_of_tracks), 3)
-        self.assertEqual(list_of_tracks[0]['track_name'], 'Another Life')
-        self.assertEqual(list_of_tracks[1]['artist'], "Noel Gallagher's High Flying Birds")
+        self.assertEqual(len(list_of_playlist_tracks), 3)
+        self.assertEqual(list_of_playlist_tracks[0]['track_name'], 'Another Life')
+        self.assertEqual(list_of_playlist_tracks[1]['artist'], "Noel Gallagher's High Flying Birds")
 
     
     def test_view_playlist_empty(self):
@@ -241,8 +241,8 @@ class ViewTracksInPlaylist(BaseTestCase):
         context = response.context
 
         #Access individual context variables
-        list_of_tracks = context['list_of_tracks']
-        self.assertEqual(len(list_of_tracks), 0)
+        list_of_playlist_tracks = context['list_of_playlist_tracks']
+        self.assertEqual(len(list_of_playlist_tracks), 0)
 
 
 class AddLinkToTrackTest(BaseTestCase):
@@ -322,7 +322,7 @@ class AddLinkToTrackTest(BaseTestCase):
         self.assertEqual(meta_data_dictionary['streaming_platform'], self.simple_streaming_link_2.streaming_platform)
 
 
-class DeletePlaylist(BaseTestCase):
+class DeletePlaylistTest(BaseTestCase):
     def test_unauthorised_user(self):
         #Generate url
         url = reverse("delete_playlists",args=[self.bad_user.username,])
@@ -431,7 +431,7 @@ class DeletePlaylist(BaseTestCase):
         self.assertFalse(playlist_is_deleted_status)
 
 
-class DeletePlaylistTracks(BaseTestCase):
+class DeletePlaylistTracksTest(BaseTestCase):
     def test_unauthorised_user(self):
         #Generate url
         url = reverse("delete_playlist_tracks",args=[self.bad_user.username, self.test_playlist.playlist_name])

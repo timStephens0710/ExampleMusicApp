@@ -479,7 +479,8 @@ def view_edit_playlist(request, username, playlist_name):
 
     #2. Get relevant PlaylistTrack from the model, along with Track + StreamingLink meta data
     playlist_tracks = PlaylistTrack.objects.filter(
-        playlist=playlist
+        playlist=playlist,
+        is_deleted=False
         ).select_related(
             'track',
             'added_by'
@@ -488,7 +489,7 @@ def view_edit_playlist(request, username, playlist_name):
         ).order_by('position')
     
     #3. Build list for track data
-    list_of_tracks = []
+    list_of_playlist_tracks = []
 
     for playlist_track in playlist_tracks:
         try:
@@ -498,7 +499,8 @@ def view_edit_playlist(request, username, playlist_name):
             streaming_links = list(track.streaming_links.all())
 
             #Create dictionary to pass through context
-            track_data = {
+            playlist_track_data = {
+                'id': playlist_track.id,
                 'position': playlist_track.position,
                 'track_id': track.id,
                 'track_name': track.track_name,
@@ -523,8 +525,8 @@ def view_edit_playlist(request, username, playlist_name):
                 'link': streaming_links[0].streaming_link if streaming_links else '#',
             }
 
-            #Append track_data to list_of_tracks
-            list_of_tracks.append(track_data)
+            #Append playlist_track_data to list_of_playlist_tracks
+            list_of_playlist_tracks.append(playlist_track_data)
         except Exception as e:
             #Skip current track and move onto the next one
             logger.error(f"Error processing track in playlist {playlist_name}: {e}")
@@ -534,7 +536,7 @@ def view_edit_playlist(request, username, playlist_name):
         'user_id': user_id,
         'username': username, 
         'playlist_name': playlist_name,
-        'list_of_tracks': list_of_tracks
+        'list_of_playlist_tracks': list_of_playlist_tracks
     }
     return render(request, 'view_edit_playlist.html', context)
 
