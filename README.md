@@ -444,7 +444,7 @@ Success
    Reorder tracks (future)
    Delete tracks
    Delete playlist(s)
-   Share playlist URL
+   Share playlist URL (future)
 ```
 
 ---
