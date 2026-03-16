@@ -1327,10 +1327,11 @@ dbt Cloud is connected to:
 - [x] Update password security with Argon 2
 - [x] Track deletion from playlists
 - [x] Track deletion from playlists
+- [ ] SoundCloud API integration
 - [ ] Improve YouTube API
 - [ ] Refactor deletePlaylists/deletePlaylistTrack ts modules into one
 - [ ] If song link exists, pull metadata from table
-- [ ] SoundCloud API integration
+- [ ] Enforce purchase links
 - [ ] Implement TypeScript to show relevent fields for Soundcloud mix
 - [ ] Track reordering (drag-and-drop)
 - [ ] Playlist search functionality
@@ -1527,7 +1528,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Last Updated:** February 2026  
+**Last Updated:** March 2026  
 **Version:** 1.1.0 (Enhanced with Selenium Integration)  
 **Maintained By:** Tim Stephens
 
