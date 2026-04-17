@@ -4,6 +4,8 @@
 
 This directory contains comprehensive unit and integration tests for the TypeScript validation modules. The test suite uses Vitest as the testing framework, providing fast execution and excellent TypeScript support.
 
+There are 80 unit tests in total.
+
 ## Test Framework
 
 **Vitest** - A blazing fast unit test framework powered by Vite
