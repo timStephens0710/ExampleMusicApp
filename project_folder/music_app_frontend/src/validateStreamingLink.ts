@@ -31,7 +31,8 @@ export function checkStreamingLinkIsValid(hostName: string | null): null | strin
         'youtu.be',
         'music.youtube.com',
         'm.youtube.com',
-        'bandcamp.com' // Main bandcamp site
+        'bandcamp.com',
+        'soundcloud.com'
     ];
 
     //Pattern matches for subdomains
@@ -49,7 +50,7 @@ export function checkStreamingLinkIsValid(hostName: string | null): null | strin
         return null;
     }
 
-    return "The streaming link doesn't contain one of the supported platforms. Please submit a link from either YouTube or Bandcamp.";
+    return "The streaming link doesn't contain one of the supported platforms. Please submit a link from either YouTube, Bandcamp or SoundCloud.";
 }
 
 

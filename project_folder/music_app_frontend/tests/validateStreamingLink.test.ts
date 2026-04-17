@@ -36,8 +36,8 @@ describe('checkStreamingLinkIsValid', () => {
     });
 
     it('returns informative message to user with an unsupported hostname', () => {
-        expect(validateStreamingLink.checkStreamingLinkIsValid('soundcloud.com')).toBe(
-            "The streaming link doesn't contain one of the supported platforms. Please submit a link from either YouTube or Bandcamp."
+        expect(validateStreamingLink.checkStreamingLinkIsValid('nts.com')).toBe(
+            "The streaming link doesn't contain one of the supported platforms. Please submit a link from either YouTube, Bandcamp or SoundCloud."
         );
     });
 
@@ -75,10 +75,10 @@ describe('checkStreamingLinkIsValid', () => {
     });
 
     it('returns an informating error message for an unsupported platform', () => {
-        const streamingLinkCheckMessage = validateStreamingLink.orchestrateCheckStreamingLinkIsValid("https://soundcloud.com/edwinmusicchannel/edmix-144-purelink")
+        const streamingLinkCheckMessage = validateStreamingLink.orchestrateCheckStreamingLinkIsValid("https://www.nts.live/shows/fifth-world/episodes/fifth-world-8th-april-2026")
         expect(streamingLinkCheckMessage).not.toBeNull;
         expect(streamingLinkCheckMessage).toBe(
-            "The streaming link doesn't contain one of the supported platforms. Please submit a link from either YouTube or Bandcamp."
+            "The streaming link doesn't contain one of the supported platforms. Please submit a link from either YouTube, Bandcamp or SoundCloud."
         );
     });
 

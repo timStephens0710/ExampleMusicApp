@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+# 2026-05-17
+### Added
+* Integrated SoundCloud
+
 # 2026-03-15
 ### Added
 * deletePlaylists.ts and deletePlaylistTracks.ts 

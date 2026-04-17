@@ -1,7 +1,7 @@
 # Music App Archive
 
 `music_app_archive` is the archive / playlist management module for the Music App.  
-It lets authenticated users create playlists, add tracks (via streaming links or manual entry), manage streaming links, and view/edit playlists. The app integrates with platform APIs (e.g., YouTube, Bandcamp) to fetch metadata, logs user activity, and uses transactional saves to keep playlist/track/link data consistent.
+It lets authenticated users create playlists, add tracks (via streaming links or manual entry), manage streaming links, and view/edit playlists. The app integrates with platform APIs (e.g., YouTube, Bandcamp, SoundCloud) to fetch metadata, logs user activity, and uses transactional saves to keep playlist/track/link data consistent.
 
 ---
 
@@ -260,7 +260,7 @@ Fields:
 ```python
 Fields:
 - track (FK to Track)
-- streaming_platform (CharField: 'youtube', 'bandcamp')
+- streaming_platform (CharField: 'youtube', 'bandcamp', 'soundcloud')
 - streaming_link (URLField, unique)
 - added_by (FK to CustomUser)
 - created_at (DateTimeField)
@@ -321,7 +321,7 @@ The `src/integrations/` module handles fetching track metadata from streaming pl
 **`orchestrate_platform_api(streaming_link, track_type)`**
 
 Central integration function that:
-1. Detects platform (YouTube, Bandcamp, etc.) from URL
+1. Detects platform (YouTube, Bandcamp, SoundCloud, etc.) from URL
 2. Calls platform-specific connector
 3. Returns standardized `meta_data_dict` for form pre-filling
 
@@ -341,6 +341,7 @@ Central integration function that:
 **Raises:**
 - `YouTubeMetaDataError` - YouTube API failures
 - `BandCampMetaDataError` - Bandcamp scraping failures
+- `SoundcloudMetaDataError` - SoundCloud API failures
 - `ValueError` - Invalid/unsupported URLs
 
 ---
@@ -351,7 +352,8 @@ Central integration function that:
 |----------|--------|--------|-----------------|
 | YouTube | Implemented | Official API | Yes |
 | YouTube Music | Implemented | Official API | Yes |
-| Bandcamp | Implemented | HTML scraping | No |
+| Bandcamp | Implemented | HTML scraping + Selenium | No |
+| SoundCloud | Implemented | Official API (OAuth 2.0) | Yes |
 
 ---
 
@@ -365,11 +367,18 @@ Central integration function that:
 - Limitations: No album info, genre limited
 
 **Bandcamp Integration** (`src/integrations/bandcamp.py`)
-- Web scraping using BeautifulSoup
-- Extracts JSON-LD structured data
+- Web scraping using Selenium + BeautifulSoup
+- Selenium required as Bandcamp blocks non-browser requests
 - No API key required
 - Extracts: track name, artist, album, purchase link
 - Fragile: Breaks if Bandcamp changes page structure
+
+**SoundCloud Integration** (`src/integrations/soundcloud.py`)
+- Uses the official SoundCloud API with OAuth 2.0 client credentials flow
+- SoundCloud is a React app — the official API is used instead of scraping, avoiding the need for Selenium entirely
+- Requires `SOUNDCLOUD_CLIENT_ID` and `SOUNDCLOUD_CLIENT_SECRET` in environment variables
+- Extracts: mix name (`title`), mix page (`user.username`)
+- Authentication: POSTs to `/oauth2/token` to retrieve an access token, then uses it as a Bearer header on the `/resolve` endpoint
 
 See [`src/integrations/README.md`](src/integrations/README.md) for detailed integration documentation.
 
@@ -392,7 +401,7 @@ See [`src/integrations/README.md`](src/integrations/README.md) for detailed inte
 - Returns `None` for graceful degradation
 
 **Integration Layer:**
-- Raises custom exceptions (`YouTubeMetaDataError`, `BandCampMetaDataError`)
+- Raises custom exceptions (`YouTubeMetaDataError`, `BandCampMetaDataError`, `SoundcloudMetaDataError`)
 - Comprehensive logging of all operations
 - Handles rate limits and network errors
 
@@ -479,7 +488,8 @@ music_app_archive/
 │       ├── __init__.py
 │       ├── main_integrations.py  # Orchestrator (routes URLs to platforms)
 │       ├── youtube.py            # YouTube Data API v3 integration
-│       ├── bandcamp.py           # Bandcamp web scraping
+│       ├── bandcamp.py           # Bandcamp web scraping (Selenium + BeautifulSoup)
+│       ├── soundcloud.py         # SoundCloud API integration (OAuth 2.0)
 │       └── README.md             # Integration documentation
 │
 ├── templates/              # HTML templates
@@ -561,9 +571,8 @@ Templates referenced in the views:
 ```bash
 # External API integrations
 google-api-python-client>=2.70.0  # YouTube Data API
-requests==2.32.3                  # HTTP requests
+requests==2.32.3                  # HTTP requests (also used for SoundCloud API)
 beautifulsoup4==4.14.2            # Web scraping (Bandcamp)
-
 ```
 
 ### Install Dependencies
@@ -585,6 +594,12 @@ conda activate music_app
 4. Create credentials → API Key
 5. Add key to `YOUTUBE_API_KEY` setting
 
+**SoundCloud API:**
+1. Go to [SoundCloud for Developers](https://developers.soundcloud.com/)
+2. Register your application to obtain a client ID and client secret
+3. Note: public API access requires an approved application — new registrations may have limited availability
+4. Add both keys to `SOUNDCLOUD_CLIENT_ID` and `SOUNDCLOUD_CLIENT_SECRET` settings
+
 ---
 
 ## Environment Variables
@@ -594,6 +609,10 @@ Required environment variables:
 ```bash
 # YouTube API
 YOUTUBE_API_KEY=your_youtube_api_key_here
+
+# SoundCloud API
+SOUNDCLOUD_CLIENT_ID=your_soundcloud_client_id_here
+SOUNDCLOUD_CLIENT_SECRET=your_soundcloud_client_secret_here
 
 # Django Settings
 SECRET_KEY=your_secret_key_here
@@ -658,7 +677,7 @@ tests/
 ├── test_views.py         # View tests (create_playlist, add_track, delete, etc.)
 ├── test_forms.py         # Form validation tests
 ├── test_services.py      # Service layer tests
-├── test_integrations.py  # API integration tests
+├── test_integrations.py  # API integration tests (YouTube, Bandcamp, SoundCloud)
 └── test_utils.py         # Utility function tests
 ```
 ---
@@ -667,7 +686,6 @@ tests/
 
 ### High Priority
 - **Continue To Implement TypeScript** - dramatically improve the front-end
-- **SoundCloud integration** - Add SoundCloud API support
 - **Fix get_playlist_tracks bug** - currently doesn't work as intended when called in the view
 - **Track reordering** - Drag-and-drop to update position
 - **Duplicate prevention** - Pre-check before DB save

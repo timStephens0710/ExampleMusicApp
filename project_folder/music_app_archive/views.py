@@ -477,6 +477,9 @@ def view_edit_playlist(request, username, playlist_name):
         , is_deleted = False
         )
 
+    #Get playlist_type
+    playlist_type = playlist.playlist_type
+
     #2. Get relevant PlaylistTrack from the model, along with Track + StreamingLink meta data
     playlist_tracks = PlaylistTrack.objects.filter(
         playlist=playlist,
@@ -520,7 +523,7 @@ def view_edit_playlist(request, username, playlist_name):
                     }
                     for link in streaming_links
                 ],
-                # For backward compatibility with your template
+                #For backward compatibility with your template
                 'streaming_platform': streaming_links[0].get_streaming_platform_display() if streaming_links else '-',
                 'link': streaming_links[0].streaming_link if streaming_links else '#',
             }
@@ -538,7 +541,15 @@ def view_edit_playlist(request, username, playlist_name):
         'playlist_name': playlist_name,
         'list_of_playlist_tracks': list_of_playlist_tracks
     }
-    return render(request, 'view_edit_playlist.html', context)
+
+    #Determine which HTML to render
+    template = (
+        'view_edit_playlist_tracks.html'
+        if playlist_type == "tracks"
+        else 'view_edit_playlist_mixes.html'
+    )
+
+    return render(request, template, context)
 
 
 @login_required

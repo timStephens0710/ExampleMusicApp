@@ -230,3 +230,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Reference to platform API key's
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+SOUNDCLOUD_CLIENT_ID = os.environ.get("SOUNDCLOUD_CLIENT_ID")
+SOUNDCLOUD_CLIENT_SECRET = os.environ.get("SOUNDCLOUD_CLIENT_SECRET")

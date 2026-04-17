@@ -15,3 +15,9 @@ class OrchestratePlatformMetaDataError(Exception):
     Custom exception for Main integration function errors
     '''
     pass
+
+class SoundcloudMetaDataError(Exception):
+    '''
+    Custom exception for Soundcloud metadata extraction errors
+    '''
+    pass

@@ -5,6 +5,7 @@ from selenium.common.exceptions import TimeoutException, WebDriverException
 
 from ..src.integrations.youtube import *
 from ..src.integrations.bandcamp import *
+from ..src.integrations.soundcloud import *
 from ..src.integrations.main_integrations import *
 
 
@@ -80,12 +81,10 @@ class TestGetSoup(TestCase):
     '''
     
     def setUp(self):
-        '''
-        Set up test fixtures
-        '''
         self.bandcamp_url = "https://artist.bandcamp.com/track/song-name"
+
+        self.platform = "bandcamp"
         
-        #Sample HTML that mimics a Bandcamp page
         self.mock_bandcamp_html = '''
         <html>
             <head>
@@ -104,81 +103,58 @@ class TestGetSoup(TestCase):
         '''
     
     @patch.dict('os.environ', {'SELENIUM_REMOTE_URL': 'http://selenium:4444'})
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Remote')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Remote')
     def test_get_soup_with_remote_selenium(self, mock_remote):
-        '''
-        Test get_soup successfully returns BeautifulSoup when using remote Selenium
-        '''
-        #Setup mock driver
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_remote.return_value = mock_driver
         
-        #Get soup object
-        result = get_soup(self.bandcamp_url)
+        result = get_soup(self.bandcamp_url, self.platform)
         
-        #Assert - verify we got a BeautifulSoup object
         self.assertIsNotNone(result)
         self.assertIsInstance(result, BeautifulSoup)
-        
-        #Assert - verify content is correct
         self.assertEqual(result.title.string, "Song Name | Artist Name")
         self.assertIsNotNone(result.find('h2', class_='trackTitle'))
         
-        #Assert - verify Remote was called with correct URL
         mock_remote.assert_called_once()
         self.assertEqual(
             mock_remote.call_args[1]['command_executor'],
             'http://selenium:4444'
         )
         
-        #Assert - verify driver methods were called
         mock_driver.execute_script.assert_called()
         mock_driver.get.assert_called_once_with(self.bandcamp_url)
         mock_driver.quit.assert_called_once()
     
-    @patch.dict('os.environ', {}, clear=True)  #No SELENIUM_REMOTE_URL
+    @patch.dict('os.environ', {}, clear=True)
     @patch('selenium.webdriver.chrome.service.Service')
     @patch('webdriver_manager.chrome.ChromeDriverManager')
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Chrome')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Chrome')
     def test_get_soup_with_local_chrome(self, mock_chrome, mock_driver_manager, mock_service):
-        '''
-        Test get_soup successfully returns BeautifulSoup when using local Chrome
-        '''
-        #Setup mocks
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_chrome.return_value = mock_driver
         mock_driver_manager.return_value.install.return_value = '/fake/path/chromedriver'
 
-        #Execute
-        result = get_soup(self.bandcamp_url)
+        result = get_soup(self.bandcamp_url, self.platform)
 
-        #Assert
         self.assertIsNotNone(result)
         self.assertIsInstance(result, BeautifulSoup)
         self.assertEqual(result.title.string, "Song Name | Artist Name")
 
-        #Verify Chrome was used instead of Remote
         mock_chrome.assert_called_once()
         mock_service.assert_called_once_with('/fake/path/chromedriver')
         mock_driver.quit.assert_called_once()
         
     @patch.dict('os.environ', {'SELENIUM_REMOTE_URL': 'http://selenium:4444'})
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Remote')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Remote')
     def test_get_soup_parses_bandcamp_elements(self, mock_remote):
-        '''
-        Test that get_soup correctly parses Bandcamp-specific elements
-        '''
-        #Setup
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_remote.return_value = mock_driver
         
-        #Get soup object
-        soup = get_soup(self.bandcamp_url)
+        soup = get_soup(self.bandcamp_url, self.platform)
         
-        #Assert - check for Bandcamp-specific elements
         track_title = soup.find('h2', class_='trackTitle')
         self.assertIsNotNone(track_title)
         self.assertEqual(track_title.get_text(), "Song Name")
@@ -187,107 +163,71 @@ class TestGetSoup(TestCase):
         self.assertIsNotNone(track_info)
     
     @patch.dict('os.environ', {'SELENIUM_REMOTE_URL': 'http://selenium:4444'})
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Remote')
-    @patch('music_app_archive.src.integrations.bandcamp.time.sleep')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Remote')
+    @patch('music_app_archive.src.integrations.main_integrations.time.sleep')
     def test_get_soup_implements_delays(self, mock_sleep, mock_remote):
-        '''
-        Test that get_soup includes random delays for anti-detection
-        '''
-        #Setup
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_remote.return_value = mock_driver
         
-        #Get soup object
-        get_soup(self.bandcamp_url)
+        get_soup(self.bandcamp_url, self.platform)
         
-        #Assert - verify sleep was called (for delays)
         self.assertTrue(mock_sleep.called)
-        #Should be called multiple times for different delays
         self.assertGreater(mock_sleep.call_count, 1)
     
     @patch.dict('os.environ', {'SELENIUM_REMOTE_URL': 'http://selenium:4444'})
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Remote')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Remote')
     def test_get_soup_executes_javascript(self, mock_remote):
-        '''
-        Test that get_soup executes JavaScript for anti-detection and scrolling
-        '''
-        #Setup
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_remote.return_value = mock_driver
         
-        #Get soup object
-        get_soup(self.bandcamp_url)
+        get_soup(self.bandcamp_url, self.platform)
         
-        #Assert - verify execute_script was called
         self.assertTrue(mock_driver.execute_script.called)
         
-        #Check for anti-detection script
         calls = [str(call) for call in mock_driver.execute_script.call_args_list]
         anti_detection_called = any('webdriver' in str(call) for call in calls)
         self.assertTrue(anti_detection_called, "Anti-detection script should be executed")
         
-        #Check for scroll script
         scroll_called = any('scrollTo' in str(call) for call in calls)
         self.assertTrue(scroll_called, "Scroll script should be executed")
     
     @patch.dict('os.environ', {'SELENIUM_REMOTE_URL': 'http://selenium:4444'})
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Remote')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Remote')
     def test_get_soup_sets_chrome_options(self, mock_remote):
-        '''
-        Test that get_soup configures Chrome options correctly
-        '''
-        #Setup
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_remote.return_value = mock_driver
         
-        #Get soup object
-        get_soup(self.bandcamp_url)
+        get_soup(self.bandcamp_url, self.platform)
         
-        #Assert - verify options were passed
         call_args = mock_remote.call_args
         options = call_args[1]['options']
         
-        #Check that options object exists
         self.assertIsNotNone(options)
-        
-        #Verify headless mode and other arguments are in the options
         self.assertTrue(hasattr(options, 'arguments'))
     
     @patch.dict('os.environ', {'SELENIUM_REMOTE_URL': 'http://selenium:4444'})
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Remote')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Remote')
     def test_get_soup_driver_cleanup_on_success(self, mock_remote):
-        '''
-        Test that driver is properly cleaned up after successful execution
-        '''
-        #Setup
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_remote.return_value = mock_driver
         
-        #Get soup object
-        get_soup(self.bandcamp_url)
+        get_soup(self.bandcamp_url, self.platform)
         
-        #Assert - verify quit was called
         mock_driver.quit.assert_called_once()
     
     @patch.dict('os.environ', {'SELENIUM_REMOTE_URL': 'http://selenium:4444'})
-    @patch('music_app_archive.src.integrations.bandcamp.webdriver.Remote')
+    @patch('music_app_archive.src.integrations.main_integrations.webdriver.Remote')
     def test_get_soup_returns_parseable_html(self, mock_remote):
-        '''
-        Test that returned BeautifulSoup can actually parse HTML content
-        '''
-        #Setup
         mock_driver = MagicMock()
         mock_driver.page_source = self.mock_bandcamp_html
         mock_remote.return_value = mock_driver
         
-        #Get soup object
-        soup = get_soup(self.bandcamp_url)
+        soup = get_soup(self.bandcamp_url, self.platform)
         
-        #Assert - test various BeautifulSoup operations work
         self.assertTrue(soup.find('body'))
         self.assertTrue(soup.find_all('a'))
         self.assertEqual(len(soup.find_all('h2')), 1)
@@ -303,7 +243,6 @@ class BandcampIntegrationTest(TestCase):
         self.bandcamp_single_track_url = "https://consulate96.bandcamp.com/track/gangstalker-consulate-remix"
         self.empty_url = ""
         
-        #Mock HTML for album track (2 links: album + artist)
         self.mock_album_track_html = '''
         <html>
             <head><title>How Are We | Horse Vision</title></head>
@@ -323,7 +262,6 @@ class BandcampIntegrationTest(TestCase):
         </html>
         '''
         
-        #Mock HTML for single track (1 link: artist only)
         self.mock_single_track_html = '''
         <html>
             <head><title>Gangstalker Consulate Remix | Consulate96</title></head>
@@ -339,7 +277,6 @@ class BandcampIntegrationTest(TestCase):
         </html>
         '''
         
-        #Mock HTML for album track with "Album - Title" format
         self.mock_album_with_dash_html = '''
         <html>
             <body>
@@ -358,7 +295,6 @@ class BandcampIntegrationTest(TestCase):
         </html>
         '''
         
-        #Mock HTML missing name-section
         self.mock_missing_section_html = '''
         <html>
             <body>
@@ -369,17 +305,16 @@ class BandcampIntegrationTest(TestCase):
         </html>
         '''
 
+        # Pre-built soup objects for orchestrator tests
+        self.album_track_soup = BeautifulSoup(self.mock_album_track_html, 'html.parser')
+        self.single_track_soup = BeautifulSoup(self.mock_single_track_html, 'html.parser')
+        self.missing_section_soup = BeautifulSoup(self.mock_missing_section_html, 'html.parser')
+
+    # --- scrape_bandcamp_page tests (unchanged, soup passed directly) ---
+
     def test_scrape_bandcamp_page_album_track_positive(self):
-        '''
-        Test scraping a track that's part of an album (2 links)
-        '''
-        #Setup
-        soup = BeautifulSoup(self.mock_album_track_html, 'html.parser')
+        result = scrape_bandcamp_page(self.album_track_soup)
         
-        #Execute
-        result = scrape_bandcamp_page(soup)
-        
-        #Assert
         self.assertIsNotNone(result)
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 3)
@@ -390,55 +325,31 @@ class BandcampIntegrationTest(TestCase):
         self.assertEqual(album_name, 'Another Life')
 
     def test_scrape_bandcamp_page_single_track_positive(self):
-        '''
-        Test scraping a single track (1 link: artist only)
-        '''
-        #Setup
-        soup = BeautifulSoup(self.mock_single_track_html, 'html.parser')
+        result = scrape_bandcamp_page(self.single_track_soup)
         
-        #Execute
-        result = scrape_bandcamp_page(soup)
-        
-        #Assert
         track_name, artist_name, album_name = result
         self.assertEqual(track_name, 'Gangstalker Consulate Remix')
         self.assertEqual(artist_name, 'Consulate96')
-        self.assertIsNone(album_name)  #No album for single tracks
+        self.assertIsNone(album_name)
 
     def test_scrape_bandcamp_page_album_with_dash(self):
-        '''
-        Test scraping album name with ' - ' separator
-        '''
-        #Setup
         soup = BeautifulSoup(self.mock_album_with_dash_html, 'html.parser')
-        
-        #Execute
         result = scrape_bandcamp_page(soup)
         
-        #Assert
         track_name, artist_name, album_name = result
         self.assertEqual(track_name, 'Test Track')
         self.assertEqual(artist_name, 'Test Artist')
-        self.assertEqual(album_name, 'Deluxe Edition')  #Text after " - "
+        self.assertEqual(album_name, 'Deluxe Edition')
 
     def test_scrape_bandcamp_page_missing_name_section(self):
-        '''
-        Test that scrape raises error when #name-section is missing
-        '''
-        #Setup
         soup = BeautifulSoup(self.mock_missing_section_html, 'html.parser')
         
-        #Execute & Assert
         with self.assertRaises(BandCampMetaDataError) as context:
             scrape_bandcamp_page(soup)
         
         self.assertIn("Could not find #name-section", str(context.exception))
 
     def test_scrape_bandcamp_page_missing_track_title(self):
-        '''
-        Test scraping when track title is missing
-        '''
-        #Setup - HTML with no trackTitle
         html = '''
         <html>
             <body>
@@ -452,21 +363,14 @@ class BandcampIntegrationTest(TestCase):
         </html>
         '''
         soup = BeautifulSoup(html, 'html.parser')
-        
-        #Execute
         result = scrape_bandcamp_page(soup)
         
-        #Assert
         track_name, artist_name, album_name = result
         self.assertIsNone(track_name)
         self.assertEqual(artist_name, 'Artist')
         self.assertEqual(album_name, 'Album')
 
     def test_scrape_bandcamp_page_missing_h3(self):
-        '''
-        Test scraping when h3 tag is missing
-        '''
-        #Setup
         html = '''
         <html>
             <body>
@@ -477,127 +381,14 @@ class BandcampIntegrationTest(TestCase):
         </html>
         '''
         soup = BeautifulSoup(html, 'html.parser')
-        
-        #Execute
         result = scrape_bandcamp_page(soup)
         
-        #Assert
         track_name, artist_name, album_name = result
         self.assertEqual(track_name, 'Track Name')
         self.assertIsNone(artist_name)
         self.assertIsNone(album_name)
 
-    @patch('music_app_archive.src.integrations.bandcamp.get_soup')
-    def test_orchestrate_bandcamp_meta_data_dictionary_positive(self, mock_get_soup):
-        '''
-        Test that orchestrate creates correct metadata dictionary
-        '''
-        #Setup mock
-        mock_soup = BeautifulSoup(self.mock_album_track_html, 'html.parser')
-        mock_get_soup.return_value = mock_soup
-        
-        #Execute
-        bandcamp_meta_data = orchestrate_bandcamp_meta_data_dictionary(
-            self.bandcamp_album_track_url
-        )
-        
-        #Assert
-        self.assertIsInstance(bandcamp_meta_data, dict)
-        self.assertEqual(bandcamp_meta_data.get('track_name'), 'How Are We')
-        self.assertEqual(bandcamp_meta_data.get('artist'), 'Horse Vision')
-        self.assertEqual(bandcamp_meta_data.get('album_name'), 'Another Life')
-        self.assertEqual(
-            bandcamp_meta_data.get('streaming_link'), 
-            bandcamp_meta_data.get('purchase_link')
-        )
-        self.assertEqual(
-            bandcamp_meta_data.get('streaming_link'),
-            self.bandcamp_album_track_url
-        )
-        self.assertEqual(bandcamp_meta_data.get('streaming_platform'), 'bandcamp')
-        self.assertEqual(bandcamp_meta_data.get('track_type'), 'track')
-        
-        #Verify get_soup was called with correct URL
-        mock_get_soup.assert_called_once_with(self.bandcamp_album_track_url)
-
-    @patch('music_app_archive.src.integrations.bandcamp.get_soup')
-    def test_orchestrate_bandcamp_single_track(self, mock_get_soup):
-        '''
-        Test orchestrate with single track (no album)
-        '''
-        #Setup mock
-        mock_soup = BeautifulSoup(self.mock_single_track_html, 'html.parser')
-        mock_get_soup.return_value = mock_soup
-        
-        #Execute
-        bandcamp_meta_data = orchestrate_bandcamp_meta_data_dictionary(
-            self.bandcamp_single_track_url
-        )
-        
-        #Assert
-        self.assertEqual(bandcamp_meta_data.get('track_name'), 'Gangstalker Consulate Remix')
-        self.assertEqual(bandcamp_meta_data.get('artist'), 'Consulate96')
-        self.assertIsNone(bandcamp_meta_data.get('album_name'))
-        self.assertEqual(bandcamp_meta_data.get('streaming_platform'), 'bandcamp')
-
-    @patch('music_app_archive.src.integrations.bandcamp.get_soup')
-    def test_orchestrate_bandcamp_meta_data_dictionary_negative(self, mock_get_soup):
-        '''
-        Test that orchestrate raises error when get_soup fails
-        '''
-        #Setup mock to raise error
-        mock_get_soup.side_effect = Exception("Connection error")
-        
-        #Execute & Assert
-        with self.assertRaises(BandCampMetaDataError) as context:
-            orchestrate_bandcamp_meta_data_dictionary(self.bandcamp_album_track_url)
-        
-        self.assertIn("Failed to extract Bandcamp metadata", str(context.exception))
-
-    @patch('music_app_archive.src.integrations.bandcamp.get_soup')
-    def test_orchestrate_handles_scraping_error(self, mock_get_soup):
-        '''
-        Test orchestrate handles errors from scrape_bandcamp_page
-        '''
-        #Setup mock with invalid HTML
-        mock_soup = BeautifulSoup(self.mock_missing_section_html, 'html.parser')
-        mock_get_soup.return_value = mock_soup
-        
-        #Execute & Assert
-        with self.assertRaises(BandCampMetaDataError):
-            orchestrate_bandcamp_meta_data_dictionary(self.bandcamp_album_track_url)
-
-    @patch('music_app_archive.src.integrations.bandcamp.get_soup')
-    def test_orchestrate_metadata_structure(self, mock_get_soup):
-        '''
-        Test that orchestrate returns all expected dictionary keys
-        '''
-        #Setup mock
-        mock_soup = BeautifulSoup(self.mock_album_track_html, 'html.parser')
-        mock_get_soup.return_value = mock_soup
-        
-        #Execute
-        result = orchestrate_bandcamp_meta_data_dictionary(self.bandcamp_album_track_url)
-        
-        #Assert - check all expected keys exist
-        expected_keys = [
-            'track_type', 'track_name', 'artist', 'album_name',
-            'purchase_link', 'mix_page', 'record_label', 'genre',
-            'streaming_platform', 'streaming_link'
-        ]
-        for key in expected_keys:
-            self.assertIn(key, result)
-        
-        #Assert - check empty fields are empty strings
-        self.assertEqual(result.get('mix_page'), '')
-        self.assertEqual(result.get('record_label'), '')
-        self.assertEqual(result.get('genre'), '')
-
     def test_scrape_bandcamp_page_whitespace_handling(self):
-        '''
-        Test that scraping properly strips whitespace
-        '''
-        #Setup - HTML with extra whitespace
         html = '''
         <html>
             <body>
@@ -614,27 +405,388 @@ class BandcampIntegrationTest(TestCase):
         </html>
         '''
         soup = BeautifulSoup(html, 'html.parser')
-        
-        #Execute
         result = scrape_bandcamp_page(soup)
         
-        #Assert - all whitespace should be stripped
         track_name, artist_name, album_name = result
         self.assertEqual(track_name, 'How Are We')
         self.assertEqual(artist_name, 'Horse Vision')
         self.assertEqual(album_name, 'Another Life')
 
+    # --- orchestrate_bandcamp_meta_data_dictionary tests ---
+    # No mock_get_soup needed — soup is passed directly
 
+    def test_orchestrate_bandcamp_meta_data_dictionary_positive(self):
+        '''
+        Test that orchestrate creates correct metadata dictionary
+        '''
+        bandcamp_meta_data = orchestrate_bandcamp_meta_data_dictionary(
+            self.album_track_soup,
+            self.bandcamp_album_track_url
+        )
+        
+        self.assertIsInstance(bandcamp_meta_data, dict)
+        self.assertEqual(bandcamp_meta_data.get('track_name'), 'How Are We')
+        self.assertEqual(bandcamp_meta_data.get('artist'), 'Horse Vision')
+        self.assertEqual(bandcamp_meta_data.get('album_name'), 'Another Life')
+        self.assertEqual(
+            bandcamp_meta_data.get('streaming_link'),
+            bandcamp_meta_data.get('purchase_link')
+        )
+        self.assertEqual(
+            bandcamp_meta_data.get('streaming_link'),
+            self.bandcamp_album_track_url
+        )
+        self.assertEqual(bandcamp_meta_data.get('streaming_platform'), 'bandcamp')
+        self.assertEqual(bandcamp_meta_data.get('track_type'), 'track')
+
+    def test_orchestrate_bandcamp_single_track(self):
+        '''
+        Test orchestrate with single track (no album)
+        '''
+        bandcamp_meta_data = orchestrate_bandcamp_meta_data_dictionary(
+            self.single_track_soup,
+            self.bandcamp_single_track_url
+        )
+        
+        self.assertEqual(bandcamp_meta_data.get('track_name'), 'Gangstalker Consulate Remix')
+        self.assertEqual(bandcamp_meta_data.get('artist'), 'Consulate96')
+        self.assertIsNone(bandcamp_meta_data.get('album_name'))
+        self.assertEqual(bandcamp_meta_data.get('streaming_platform'), 'bandcamp')
+
+    def test_orchestrate_bandcamp_meta_data_dictionary_negative(self):
+        '''
+        Test that orchestrate raises BandCampMetaDataError when soup is invalid
+        '''
+        with self.assertRaises(BandCampMetaDataError) as context:
+            orchestrate_bandcamp_meta_data_dictionary(
+                self.missing_section_soup,
+                self.bandcamp_album_track_url
+            )
+        
+        self.assertIn("Could not find #name-section", str(context.exception))
+
+    def test_orchestrate_handles_scraping_error(self):
+        '''
+        Test orchestrate raises BandCampMetaDataError on missing name-section
+        '''
+        with self.assertRaises(BandCampMetaDataError):
+            orchestrate_bandcamp_meta_data_dictionary(
+                self.missing_section_soup,
+                self.bandcamp_album_track_url
+            )
+
+    def test_orchestrate_metadata_structure(self):
+        '''
+        Test that orchestrate returns all expected dictionary keys
+        '''
+        result = orchestrate_bandcamp_meta_data_dictionary(
+            self.album_track_soup,
+            self.bandcamp_album_track_url
+        )
+        
+        expected_keys = [
+            'track_type', 'track_name', 'artist', 'album_name',
+            'purchase_link', 'mix_page', 'record_label', 'genre',
+            'streaming_platform', 'streaming_link'
+        ]
+        for key in expected_keys:
+            self.assertIn(key, result)
+        
+        self.assertEqual(result.get('mix_page'), '')
+        self.assertEqual(result.get('record_label'), '')
+        self.assertEqual(result.get('genre'), '')
+
+
+class SoundcloudIntegrationTest(TestCase):
+    '''
+    Test the Soundcloud integration functions in soundcloud.py
+    '''
+    def setUp(self):
+        self.soundcloud_url = "https://soundcloud.com/resident-advisor/ex-795-avalon-emerson"
+        self.soundcloud_track_url = "https://soundcloud.com/scissorandthread/drowning-reiling-hull-dub-1"
+        self.mix_track_type = "mix"
+        self.track_track_type = "track"
+        self.mock_access_token = "mock_access_token_123"
+
+        self.mock_token_response = {
+            "access_token": self.mock_access_token
+        }
+
+        # Mock response for a mix
+        self.mock_mix_response = {
+            "title": "EX.795 Avalon Emerson",
+            "user": {
+                "username": "Resident Advisor",
+                "permalink": "resident-advisor",
+            }
+        }
+
+        # Mock response for a track
+        self.mock_track_response = {
+            "title": "Drowning (Reiling Hull Dub)",
+            "user": {
+                "username": "Scissor & Thread",
+                "permalink": "scissorandthread",
+            },
+            "purchase_url": "https://scissorandthread.bandcamp.com",
+            "label_name": "Scissor & Thread",
+            "tag_list": "dub techno"
+        }
+
+    def _mock_requests(self, mock_post, mock_get, track_response=None):
+        '''
+        Helper to set up standard token + resolve mocks.
+        Defaults to mix response unless track_response is provided.
+        '''
+        mock_token = MagicMock()
+        mock_token.json.return_value = self.mock_token_response
+        mock_post.return_value = mock_token
+
+        mock_resolve = MagicMock()
+        mock_resolve.json.return_value = track_response or self.mock_mix_response
+        mock_get.return_value = mock_resolve
+
+    # --- get_soundcloud_metadata tests ---
+
+    @patch('music_app_archive.src.integrations.soundcloud.requests.get')
+    @patch('music_app_archive.src.integrations.soundcloud.requests.post')
+    def test_get_soundcloud_metadata_positive(self, mock_post, mock_get):
+        '''
+        Test get_soundcloud_metadata returns the full response dict
+        '''
+        self._mock_requests(mock_post, mock_get)
+
+        result = get_soundcloud_metadata(self.soundcloud_url)
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result.get("title"), "EX.795 Avalon Emerson")
+        self.assertEqual(result.get("user", {}).get("username"), "Resident Advisor")
+
+    @patch('music_app_archive.src.integrations.soundcloud.requests.get')
+    @patch('music_app_archive.src.integrations.soundcloud.requests.post')
+    def test_get_soundcloud_metadata_calls_token_endpoint(self, mock_post, mock_get):
+        '''
+        Test that the OAuth token endpoint is called correctly
+        '''
+        self._mock_requests(mock_post, mock_get)
+
+        get_soundcloud_metadata(self.soundcloud_url)
+
+        mock_post.assert_called_once_with(
+            "https://api.soundcloud.com/oauth2/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": settings.SOUNDCLOUD_CLIENT_ID,
+                "client_secret": settings.SOUNDCLOUD_CLIENT_SECRET
+            }
+        )
+
+    @patch('music_app_archive.src.integrations.soundcloud.requests.get')
+    @patch('music_app_archive.src.integrations.soundcloud.requests.post')
+    def test_get_soundcloud_metadata_calls_resolve_endpoint(self, mock_post, mock_get):
+        '''
+        Test that the resolve endpoint is called with correct params and auth header
+        '''
+        self._mock_requests(mock_post, mock_get)
+
+        get_soundcloud_metadata(self.soundcloud_url)
+
+        mock_get.assert_called_once_with(
+            "https://api.soundcloud.com/resolve",
+            params={"url": self.soundcloud_url},
+            headers={"Authorization": f"OAuth {self.mock_access_token}"}
+        )
+
+    @patch('music_app_archive.src.integrations.soundcloud.requests.get')
+    @patch('music_app_archive.src.integrations.soundcloud.requests.post')
+    def test_get_soundcloud_metadata_token_failure(self, mock_post, mock_get):
+        '''
+        Test that a token request HTTP failure raises SoundcloudMetaDataError
+        '''
+        mock_post.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
+
+        with self.assertRaises(SoundcloudMetaDataError) as context:
+            get_soundcloud_metadata(self.soundcloud_url)
+
+        self.assertIn("HTTP error fetching SoundCloud metadata", str(context.exception))
+        mock_get.assert_not_called()
+
+    @patch('music_app_archive.src.integrations.soundcloud.requests.get')
+    @patch('music_app_archive.src.integrations.soundcloud.requests.post')
+    def test_get_soundcloud_metadata_resolve_failure(self, mock_post, mock_get):
+        '''
+        Test that a resolve request HTTP failure raises SoundcloudMetaDataError
+        '''
+        mock_token = MagicMock()
+        mock_token.json.return_value = self.mock_token_response
+        mock_post.return_value = mock_token
+
+        mock_get.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError("404 Not Found")
+
+        with self.assertRaises(SoundcloudMetaDataError) as context:
+            get_soundcloud_metadata(self.soundcloud_url)
+
+        self.assertIn("HTTP error fetching SoundCloud metadata", str(context.exception))
+
+    @patch('music_app_archive.src.integrations.soundcloud.requests.get')
+    @patch('music_app_archive.src.integrations.soundcloud.requests.post')
+    def test_get_soundcloud_metadata_missing_access_token(self, mock_post, mock_get):
+        '''
+        Test that a missing access token in the token response raises SoundcloudMetaDataError
+        '''
+        mock_token = MagicMock()
+        mock_token.json.return_value = {}
+        mock_post.return_value = mock_token
+
+        with self.assertRaises(SoundcloudMetaDataError) as context:
+            get_soundcloud_metadata(self.soundcloud_url)
+
+        self.assertIn("Failed to retrieve SoundCloud access token", str(context.exception))
+        mock_get.assert_not_called()
+
+    @patch('music_app_archive.src.integrations.soundcloud.requests.get')
+    @patch('music_app_archive.src.integrations.soundcloud.requests.post')
+    def test_get_soundcloud_metadata_unexpected_error(self, mock_post, mock_get):
+        '''
+        Test that an unexpected error raises SoundcloudMetaDataError
+        '''
+        mock_post.side_effect = Exception("Unexpected error")
+
+        with self.assertRaises(SoundcloudMetaDataError) as context:
+            get_soundcloud_metadata(self.soundcloud_url)
+
+        self.assertIn("Failed to fetch SoundCloud metadata", str(context.exception))
+
+    # --- orchestrate_soundcloud_meta_data_dictionary tests (mix) ---
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_mix_positive(self, mock_get_metadata):
+        '''
+        Test that orchestrate returns correct metadata dictionary for a mix
+        '''
+        mock_get_metadata.return_value = self.mock_mix_response
+
+        result = orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_url, self.mix_track_type)
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result.get('track_type'), "mix")
+        self.assertEqual(result.get('track_name'), "EX.795 Avalon Emerson")
+        self.assertEqual(result.get('mix_page'), "Resident Advisor")
+        self.assertEqual(result.get('streaming_platform'), "soundcloud")
+        self.assertEqual(result.get('streaming_link'), self.soundcloud_url)
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_mix_metadata_structure(self, mock_get_metadata):
+        '''
+        Test that orchestrate returns all expected keys for a mix
+        '''
+        mock_get_metadata.return_value = self.mock_mix_response
+
+        result = orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_url, self.mix_track_type)
+
+        expected_keys = ['track_type', 'track_name', 'artist', 'mix_page', 'streaming_platform', 'streaming_link']
+        for key in expected_keys:
+            self.assertIn(key, result)
+
+    # --- orchestrate_soundcloud_meta_data_dictionary tests (track) ---
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_track_positive(self, mock_get_metadata):
+        '''
+        Test that orchestrate returns correct metadata dictionary for a track
+        '''
+        mock_get_metadata.return_value = self.mock_track_response
+
+        result = orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_track_url, self.track_track_type)
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result.get('track_type'), "track")
+        self.assertEqual(result.get('track_name'), "Drowning (Reiling Hull Dub)")
+        self.assertEqual(result.get('artist'), "Scissor & Thread")
+        self.assertEqual(result.get('purchase_link'), "https://scissorandthread.bandcamp.com")
+        self.assertEqual(result.get('record_label'), "Scissor & Thread")
+        self.assertEqual(result.get('genre'), "dub techno")
+        self.assertEqual(result.get('streaming_platform'), "soundcloud")
+        self.assertEqual(result.get('streaming_link'), self.soundcloud_track_url)
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_track_metadata_structure(self, mock_get_metadata):
+        '''
+        Test that orchestrate returns all expected keys for a track
+        '''
+        mock_get_metadata.return_value = self.mock_track_response
+
+        result = orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_track_url, self.track_track_type)
+
+        expected_keys = ['track_type', 'track_name', 'artist', 'streaming_platform', 'streaming_link', 'purchase_link', 'record_label', 'genre']
+        for key in expected_keys:
+            self.assertIn(key, result)
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_track_missing_optional_fields(self, mock_get_metadata):
+        '''
+        Test graceful handling when optional track fields are missing from response
+        '''
+        mock_get_metadata.return_value = {
+            "title": "Drowning (Reiling Hull Dub)",
+            "user": {"username": "Scissor & Thread"},
+            "purchase_url": None,
+            "label_name": None,
+            "tag_list": None
+        }
+
+        result = orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_track_url, self.track_track_type)
+
+        self.assertEqual(result.get('track_name'), "Drowning (Reiling Hull Dub)")
+        self.assertEqual(result.get('artist'), "Scissor & Thread")
+        self.assertIsNone(result.get('purchase_link'))
+        self.assertIsNone(result.get('record_label'))
+        self.assertIsNone(result.get('genre'))
+
+    # --- shared orchestrate tests ---
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_negative(self, mock_get_metadata):
+        '''
+        Test that a generic exception is wrapped in SoundcloudMetaDataError
+        '''
+        mock_get_metadata.side_effect = Exception("Connection error")
+
+        with self.assertRaises(SoundcloudMetaDataError) as context:
+            orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_url, self.mix_track_type)
+
+        self.assertIn("Failed to extract Soundcloud metadat", str(context.exception))
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_propagates_soundcloud_error(self, mock_get_metadata):
+        '''
+        Test that a SoundcloudMetaDataError from get_soundcloud_metadata is propagated directly
+        '''
+        mock_get_metadata.side_effect = SoundcloudMetaDataError("HTTP error fetching SoundCloud metadata: 401")
+
+        with self.assertRaises(SoundcloudMetaDataError) as context:
+            orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_url, self.mix_track_type)
+
+        self.assertIn("HTTP error fetching SoundCloud metadata", str(context.exception))
+
+    @patch('music_app_archive.src.integrations.soundcloud.get_soundcloud_metadata')
+    def test_orchestrate_soundcloud_passes_url(self, mock_get_metadata):
+        '''
+        Test that orchestrate passes the correct URL to get_soundcloud_metadata
+        '''
+        mock_get_metadata.return_value = self.mock_mix_response
+
+        orchestrate_soundcloud_meta_data_dictionary(self.soundcloud_url, self.mix_track_type)
+
+        mock_get_metadata.assert_called_once_with(self.soundcloud_url)
+
+        
 class MainIntegrationTest(TestCase):
-    '''
-    Test the Main integration functions that orchestrate the respective streaming platform API's
-    '''
     def setUp(self):
         self.bandcamp_track_url = "https://horsevision.bandcamp.com/track/how-are-we"
         self.track_type = 'track'
         self.empty_url = ""
         
-        #Mock bandcamp_meta_data_dictionary 
         self.mock_bandcamp_metadata = {
             'track_type': 'track',
             'track_name': 'How Are We',
@@ -647,33 +799,28 @@ class MainIntegrationTest(TestCase):
             'record_label': '',
             'genre': '',
         }
-    
+
+    @patch('music_app_archive.src.integrations.main_integrations.get_soup')
     @patch('music_app_archive.src.integrations.main_integrations.orchestrate_bandcamp_meta_data_dictionary')
-    def test_orchestrate_platform_api_positive(self, mock_bandcamp_orchestrate):
+    def test_orchestrate_platform_api_positive(self, mock_bandcamp_orchestrate, mock_get_soup):
         '''
         Test orchestrate_platform_api successfully routes to Bandcamp
         '''
-        #Setup mock
+        mock_soup = MagicMock()
+        mock_get_soup.return_value = mock_soup
         mock_bandcamp_orchestrate.return_value = self.mock_bandcamp_metadata
         
-        #Generate meta_data_dict
         meta_data_dict = orchestrate_platform_api(self.bandcamp_track_url, self.track_type)
         
-        #Assert
         self.assertEqual(meta_data_dict.get('streaming_platform'), 'bandcamp')
-        self.assertEqual(meta_data_dict.get('track_type'), 'track')
         self.assertEqual(meta_data_dict.get('track_name'), 'How Are We')
         self.assertEqual(meta_data_dict.get('artist'), 'Horse Vision')
         self.assertEqual(meta_data_dict.get('album_name'), 'Another Life')
-        self.assertEqual(meta_data_dict.get('streaming_link'), meta_data_dict.get('purchase_link'))
         
-        #Verify Bandcamp orchestration was called
-        mock_bandcamp_orchestrate.assert_called_once_with(self.bandcamp_track_url)
+        #Verify get_soup was called, then its result passed to the orchestrator
+        mock_get_soup.assert_called_once_with(self.bandcamp_track_url, 'bandcamp')
+        mock_bandcamp_orchestrate.assert_called_once_with(mock_soup, self.bandcamp_track_url)
 
     def test_orchestrate_platform_api_negative(self):
-        '''
-        Test orchestrate_platform_api raises error for empty URL
-        '''
-        #Execute & Assert
         with self.assertRaises(ValueError):
-            meta_data_dict = orchestrate_platform_api(self.empty_url, self.track_type)
+            orchestrate_platform_api(self.empty_url, self.track_type)

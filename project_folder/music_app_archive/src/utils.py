@@ -8,6 +8,7 @@ logger.setLevel(logging.INFO)
 PLATFORM_DOMAINS = {
     'youtube': ['youtube.com', 'youtu.be', 'music.youtube.com', 'm.youtube.com'],
     'bandcamp': ['bandcamp.com'],
+    'soundcloud': ['soundcloud.com'],
 }
 
 PLAYLIST_TO_TRACK_TYPE = {

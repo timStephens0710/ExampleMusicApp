@@ -48,6 +48,7 @@ class AddStreamingLink(forms.Form):
         ('youtube', 'YouTube'),
         ('youtube_music', 'YouTube Music'),
         ('bandcamp', 'Bandcamp'),
+        ('soundcloud', 'Soundcloud'),
     ]
 
     track_type = forms.ChoiceField(choices=TRACK_TYPE, label='Type')
@@ -60,7 +61,7 @@ class AddStreamingLink(forms.Form):
         
         if not platform:
             raise forms.ValidationError(
-                "URL must be from YouTube or Bandcamp"
+                "URL must be from YouTube, Bandcamp or SoundCloud"
             )
         return url
 

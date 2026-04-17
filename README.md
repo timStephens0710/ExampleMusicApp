@@ -1,6 +1,6 @@
 # Music App
 
-A Django-based web application for archiving and managing music playlists, with automatic metadata extraction from streaming platforms including YouTube and Bandcamp. The app features secure email-based authentication, playlist and track management, and a Selenium-powered scraping layer for platforms without a public API.
+A Django-based web application for archiving and managing music playlists, with automatic metadata extraction from streaming platforms including YouTube, Bandcamp, and SoundCloud. The app features secure email-based authentication, playlist and track management, a Selenium-powered scraping layer for platforms without a public API, and an official API integration for SoundCloud using OAuth 2.0.
 
 The project is deliberately full-stack in scope, built to demonstrate practical experience across backend web development (Django, PostgreSQL), client-side validation (TypeScript, Vite), infrastructure (Docker, Selenium Grid), and a modern data analytics stack — with a Snowflake data warehouse, dbt transformation layer following medallion architecture, and an Airflow pipeline orchestrating the full extract → load → transform workflow.
 
@@ -55,7 +55,7 @@ The application consists of three main Django modules, a TypeScript frontend wor
 ### Playlist Management
 - Create unlimited playlists
 - Add tracks from multiple streaming platforms
-- Automatic metadata extraction from YouTube, Bandcamp, and more
+- Automatic metadata extraction from YouTube, Bandcamp, SoundCloud, and more
 - Manual entry fallback if metadata unavailable
 - Track positioning and ordering
 - Public/private playlist visibility
@@ -64,7 +64,7 @@ The application consists of three main Django modules, a TypeScript frontend wor
 - **YouTube** - Official API integration
 - **YouTube Music** - Official API integration
 - **Bandcamp** - Advanced web scraping with Selenium (headless Chrome)
-- **SoundCloud** - Planned
+- **SoundCloud** - Official API integration (OAuth 2.0 client credentials)
 - **Nina Protocol** - Planned
 
 ### Performance & Optimization
@@ -78,7 +78,7 @@ The application consists of three main Django modules, a TypeScript frontend wor
 - Real-time form validation
 - Email format validation
 - Password strength enforcement (8+ chars, numbers, special chars, uppercase)
-- Streaming link validation (YouTube, Bandcamp)
+- Streaming link validation (YouTube, Bandcamp, SoundCloud)
 - Form text validation (length limits, mandatory fields)
 - Password visibility toggle
 - Comprehensive test coverage with Vitest
@@ -107,8 +107,8 @@ The application follows Django's multi-app architecture with clear separation of
 │ - User registration  │ │ - Playlists       │ │ - YouTube API     │
 │ - Email verification │ │ - Tracks          │ │ - Bandcamp        │
 │ - Login/Logout       │ │ - Streaming links │ │   (Selenium)      │
-│ - Password reset     │ │ - Metadata fetch  │ │ - SoundCloud      │
-│ - Token management   │ │ - Query optimize  │ │                   │
+│ - Password reset     │ │ - Metadata fetch  │ │ - SoundCloud API  │
+│ - Token management   │ │ - Query optimize  │ │   (OAuth 2.0)     │
 └──────────────────────┘ └────────┬──────────┘ └───────────────────┘
             │                     │
             │                     │
@@ -163,6 +163,8 @@ The application follows Django's multi-app architecture with clear separation of
     Persistence            Web Scraping           Logic
 ```
 
+**Note:** Selenium Grid is used exclusively for Bandcamp scraping. SoundCloud uses the official REST API and does not require Selenium.
+
 ---
 
 ## Module Descriptions
@@ -198,7 +200,7 @@ music_app_main/
 - `EMAIL_BACKEND` - SMTP configuration
 - `STATIC_ROOT` / `MEDIA_ROOT` - File serving
 - `SELENIUM_REMOTE_URL` - Selenium WebDriver endpoint
-- API keys (YouTube, etc.)
+- API keys (YouTube, SoundCloud, etc.)
 
 ---
 
@@ -295,7 +297,7 @@ Success
 - Playlist CRUD operations
 - Track management with metadata
 - Streaming link validation and storage
-- External API integration (YouTube API, Bandcamp Selenium scraping)
+- External API integration (YouTube API, Bandcamp Selenium scraping, SoundCloud OAuth API)
 - Query optimization for performance
 - Transactional data consistency
 
@@ -320,11 +322,11 @@ Save to database
 Redirect to add tracks
 ```
 
-#### Add Track Flow (with Bandcamp Selenium Integration)
+#### Add Track Flow
 ```
 User submits streaming URL
     ↓
-Detect platform (YouTube, Bandcamp, etc.)
+Detect platform (YouTube, Bandcamp, SoundCloud, etc.)
     ↓
 Call platform API/scraper
     ↓
@@ -332,17 +334,25 @@ Call platform API/scraper
 │              ↓
 │          Extract metadata
 │
-└─ Bandcamp → Selenium WebDriver
-               ↓
-           Launch headless Chrome
-               ↓
-           Navigate to URL with anti-detection
-               ↓
-           Wait for dynamic content
-               ↓
-           Parse HTML with BeautifulSoup
-               ↓
-           Extract track metadata
+├─ Bandcamp → Selenium WebDriver
+│               ↓
+│           Launch headless Chrome
+│               ↓
+│           Navigate to URL with anti-detection
+│               ↓
+│           Wait for dynamic content
+│               ↓
+│           Parse HTML with BeautifulSoup
+│               ↓
+│           Extract track metadata
+│
+└─ SoundCloud → SoundCloud REST API (OAuth 2.0)
+                ↓
+            POST /oauth2/token → access token
+                ↓
+            GET /resolve?url=... → track object
+                ↓
+            Extract mix name & artist
     ↓
 ├─ Success → Metadata extracted
 │              ↓
@@ -379,6 +389,13 @@ Success
 - ✓ Works in both local and Docker environments
 - ✓ Session pooling via Selenium Grid
 - ✓ VNC debugging capability (port 7900)
+
+**SoundCloud Integration Features:**
+- ✓ Official SoundCloud API — no Selenium required
+- ✓ OAuth 2.0 client credentials flow
+- ✓ Resolves any public SoundCloud URL via `/resolve` endpoint
+- ✓ Extracts mix name and artist username
+- ✓ Platform-specific error handling (`SoundcloudMetaDataError`)
 
 **See:** [`music_app_archive/README.md`](music_app_archive/README.md) for detailed documentation.
 
@@ -426,7 +443,7 @@ Success
    Profile → Create playlist → Name + type + privacy → Save
    
 4. ADD TRACKS
-   Playlist → Add link (TS validation) → Paste URL (YouTube/Bandcamp)
+   Playlist → Add link (TS validation) → Paste URL (YouTube/Bandcamp/SoundCloud)
          ↓
    API fetches metadata
          ↓
@@ -475,6 +492,7 @@ music_app/
 │   │   ├── integrations/        # Platform integrations
 │   │   │   ├── youtube.py       # YouTube API
 │   │   │   ├── bandcamp.py      # Selenium scraper with anti-detection
+│   │   │   ├── soundcloud.py    # SoundCloud API (OAuth 2.0)
 │   │   │   └── README.md        # Integration documentation
 │   │   └── utils.py             # Helper functions
 │   └── tests/                   # Archive module tests
@@ -576,6 +594,10 @@ EMAIL_HOST_PASSWORD=your-app-specific-password
 
 # YouTube API
 YOUTUBE_API_KEY=your-youtube-api-key
+
+# SoundCloud API
+SOUNDCLOUD_CLIENT_ID=your-soundcloud-client-id
+SOUNDCLOUD_CLIENT_SECRET=your-soundcloud-client-secret
 
 # Application URLs
 SITE_URL=http://localhost:8000
@@ -704,6 +726,10 @@ EMAIL_HOST_PASSWORD=your-app-specific-password
 # YouTube API
 YOUTUBE_API_KEY=your-youtube-api-key
 
+# SoundCloud API
+SOUNDCLOUD_CLIENT_ID=your-soundcloud-client-id
+SOUNDCLOUD_CLIENT_SECRET=your-soundcloud-client-secret
+
 # Application URLs
 SITE_URL=http://localhost:8000
 ```
@@ -740,12 +766,14 @@ Access at: http://localhost:8000
 | `DEBUG` | Debug mode (True/False) | `True` |
 | `ALLOWED_HOSTS` | Allowed host domains | `localhost,127.0.0.1` |
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
-| `SELENIUM_REMOTE_URL` | Selenium WebDriver endpoint (Docker) | `http://selenium:4444` (leave empty for local) |
+| `SELENIUM_REMOTE_URL` | Selenium WebDriver endpoint (Docker only — Bandcamp) | `http://selenium:4444` (leave empty for local) |
 | `EMAIL_HOST` | SMTP server | `smtp.gmail.com` |
 | `EMAIL_PORT` | SMTP port | `587` |
 | `EMAIL_HOST_USER` | Email username | `your-email@gmail.com` |
 | `EMAIL_HOST_PASSWORD` | Email password/app password | `your-app-password` |
 | `YOUTUBE_API_KEY` | YouTube Data API v3 key | `AIzaSyD...` |
+| `SOUNDCLOUD_CLIENT_ID` | SoundCloud OAuth client ID | `your-client-id` |
+| `SOUNDCLOUD_CLIENT_SECRET` | SoundCloud OAuth client secret | `your-client-secret` |
 | `SITE_URL` | Full site URL | `http://localhost:8000` |
 
 ### Docker-Specific Configuration
@@ -831,6 +859,15 @@ The Bandcamp integration (`bandcamp.py`) automatically detects the environment:
 - Disables automation flags
 - Random delays to mimic human behavior
 - Window scrolling simulation
+
+### SoundCloud API Configuration
+
+The SoundCloud integration (`soundcloud.py`) uses the official REST API — no Selenium required:
+
+- Authenticates via OAuth 2.0 client credentials (`POST /oauth2/token`)
+- Resolves track URLs via the `/resolve` endpoint
+- Requires an approved SoundCloud developer application
+- Both `SOUNDCLOUD_CLIENT_ID` and `SOUNDCLOUD_CLIENT_SECRET` must be set in `.env.dev`
 
 ---
 
@@ -1008,7 +1045,8 @@ Backend Tests:
     ├── test_services.py
     └── test_integrations/
         ├── test_youtube.py
-        └── test_bandcamp.py        # Tests Selenium scraper
+        ├── test_bandcamp.py        # Tests Selenium scraper
+        └── test_soundcloud.py      # Tests SoundCloud API integration
 
 Frontend Tests:
 └── music_app_frontend/tests/
@@ -1030,7 +1068,8 @@ from music_app_archive.src.integrations.bandcamp import (
 
 # Test scraping
 url = "https://artist.bandcamp.com/track/song-name"
-metadata = orchestrate_bandcamp_meta_data_dictionary(url)
+soup = get_soup(url)
+metadata = orchestrate_bandcamp_meta_data_dictionary(soup, url)
 print(metadata)
 # Output: {
 #     'track_type': 'track',
@@ -1040,6 +1079,28 @@ print(metadata)
 #     'streaming_platform': 'bandcamp',
 #     'streaming_link': 'https://...',
 #     ...
+# }
+```
+
+### Testing SoundCloud Integration
+
+```python
+# In Django shell or test
+from music_app_archive.src.integrations.soundcloud import (
+    get_soundcloud_metadata,
+    orchestrate_soundcloud_meta_data_dictionary
+)
+
+# Test API call
+url = "https://soundcloud.com/kioskradio/beautiful-freaks-w-remove-me
+metadata = orchestrate_soundcloud_meta_data_dictionary(url)
+print(metadata)
+# Output: {
+#     'track_type': 'mix',
+#     'track_name': 'Beautiful Freaks w/ Remove-Me @ Kiosk Radio 07.02.2026',
+#     'mix_page': 'Kiosk Radio',
+#     'streaming_platform': 'soundcloud',
+#     'streaming_link': 'https://...',
 # }
 ```
 
@@ -1057,9 +1118,10 @@ print(metadata)
 - **Python 3.11.9** - Programming language
 - **PostgreSQL 16** - Production database
 - **Django ORM** - Database abstraction
-- **Selenium 4.40.0** - Browser automation for web scraping
+- **Selenium 4.40.0** - Browser automation for Bandcamp web scraping
 - **BeautifulSoup 4.14.2** - HTML parsing
 - **webdriver-manager 4.0.2** - Automatic ChromeDriver management
+- **requests** - HTTP client for SoundCloud API
 
 ### Frontend
 - **TypeScript 4.x+** - Type-safe JavaScript
@@ -1072,10 +1134,11 @@ print(metadata)
 - **Docker Compose** - Multi-container orchestration
 - **Conda** - Python environment management
 - **NPM** - JavaScript package management
-- **Selenium Grid** - Distributed browser testing
+- **Selenium Grid** - Distributed browser testing (Bandcamp only)
 
 ### External Services
 - **YouTube Data API v3** - Video metadata
+- **SoundCloud API** - Mix metadata (OAuth 2.0 client credentials)
 - **Google SMTP** - Email sending
 - **Bandcamp** - Web scraping with Selenium (headless Chrome)
 
@@ -1084,7 +1147,7 @@ print(metadata)
 - **Coverage.py** - Backend test coverage
 - **Vitest** - Frontend test coverage
 - **Git** - Version control
-- **VNC** - Selenium session debugging
+- **VNC** - Selenium session debugging (Bandcamp)
 
 ---
 
@@ -1097,8 +1160,8 @@ print(metadata)
 | YouTube |  Live | Official API | REST API | [YouTube API Docs](https://developers.google.com/youtube/v3) |
 | YouTube Music |  Live | Official API | REST API | Same as YouTube |
 | Bandcamp |  Live | Web Scraping | Selenium + BeautifulSoup | Custom implementation |
+| SoundCloud |  Live | Official API | REST API (OAuth 2.0) | Custom implementation |
 | Nina Protocol |  Planned | Official API | REST API | Custom developed |
-| SoundCloud |  Planned | Web Scraping | Selenium | API deprecated |
 
 ### Integration Architecture
 
@@ -1109,20 +1172,23 @@ orchestrate_platform_api()
        ↓
 detect_streaming_platform()
        ↓
-    ┌──┴──────────────────────┐
-    │                         │
-    ▼                         ▼
-YouTube API          Bandcamp Selenium Scraper
-    │                         │
-    │                    Launch Chrome
-    │                         ↓
-    │                 Navigate with anti-detection
-    │                         ↓
-    │                  Parse HTML (BeautifulSoup)
-    │                         ↓
-    │                  Extract metadata
-    │                         │
-    └────────┬────────────────┘
+    ┌──┴──────────────────────┬──────────────────────┐
+    │                         │                      │
+    ▼                         ▼                      ▼
+YouTube API          Bandcamp Selenium        SoundCloud API
+    │                Scraper                      │
+    │                    │                POST /oauth2/token
+    │               Launch Chrome                 │
+    │                    ↓               GET /resolve?url=...
+    │            Navigate with                    │
+    │            anti-detection          Extract mix name
+    │                    ↓               & artist username
+    │             Parse HTML                      │
+    │             (BeautifulSoup)                 │
+    │                    ↓                        │
+    │             Extract metadata                │
+    │                    │                        │
+    └────────┬───────────┴────────────────────────┘
              ↓
     Standardized metadata dict
              ↓
@@ -1169,6 +1235,23 @@ else:
 - WebDriver exception catching
 - Graceful fallback to manual entry
 - Comprehensive logging
+
+### SoundCloud API Details
+
+**Authentication:** OAuth 2.0 client credentials flow — no user login required.
+
+**Key Endpoints:**
+- `POST https://api.soundcloud.com/oauth2/token` — exchanges client ID + secret for an access token
+- `GET https://api.soundcloud.com/resolve?url=...` — resolves any public SoundCloud URL to a track object
+
+**Extracted Fields:**
+- `title` → mix/track name
+- `user.username` → artist display name
+
+**Error Handling:**
+- `SoundcloudMetaDataError` raised on HTTP errors, missing access token, or unexpected failures
+- Graceful fallback to manual entry on API failure
+- Separate handling for token failures vs. resolve failures
 
 See [`music_app_archive/src/integrations/README.md`](music_app_archive/src/integrations/README.md) for detailed integration documentation.
 
@@ -1326,13 +1409,12 @@ dbt Cloud is connected to:
 - [x] Fix Bandcamp API
 - [x] Update password security with Argon 2
 - [x] Track deletion from playlists
-- [x] Track deletion from playlists
-- [ ] SoundCloud API integration
+- [x] SoundCloud API integration (OAuth 2.0)
 - [ ] Improve YouTube API
 - [ ] Refactor deletePlaylists/deletePlaylistTrack ts modules into one
 - [ ] If song link exists, pull metadata from table
 - [ ] Enforce purchase links
-- [ ] Implement TypeScript to show relevent fields for Soundcloud mix
+- [ ] Implement TypeScript to show relevant fields for SoundCloud mix
 - [ ] Track reordering (drag-and-drop)
 - [ ] Playlist search functionality
 - [ ] User profile customization
@@ -1489,6 +1571,12 @@ We welcome contributions! Please follow these guidelines:
 **Problem:** webdriver-manager fails to download ChromeDriver  
 **Solution:** Check internet connection or manually download from [ChromeDriver downloads](https://chromedriver.chromium.org/downloads)
 
+**Problem:** `401 Unauthorized` from SoundCloud API  
+**Solution:** Verify both `SOUNDCLOUD_CLIENT_ID` and `SOUNDCLOUD_CLIENT_SECRET` are set correctly in `.env.dev`. A client ID alone is not sufficient — the integration uses the OAuth 2.0 client credentials flow, so both values are required.
+
+**Problem:** SoundCloud returns unexpected metadata  
+**Solution:** Confirm the URL is a public track or mix. Private tracks will return a 401 regardless of credentials.
+
 ---
 
 ## Documentation
@@ -1514,6 +1602,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Django Software Foundation
 - YouTube Data API
+- SoundCloud API
 - Bandcamp for their structured HTML
 - Selenium WebDriver project
 - TypeScript and Vite communities
@@ -1528,8 +1617,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Last Updated:** March 2026  
-**Version:** 1.1.0 (Enhanced with Selenium Integration)  
+**Last Updated:** April 2026  
+**Version:** 1.2.0 (SoundCloud API Integration)  
 **Maintained By:** Tim Stephens
 
 ---
@@ -1541,6 +1630,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Vite Documentation](https://vitejs.dev/)
 - [Docker Documentation](https://docs.docker.com/)
 - [YouTube Data API](https://developers.google.com/youtube/v3)
+- [SoundCloud API](https://developers.soundcloud.com/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Selenium Documentation](https://www.selenium.dev/documentation/)
 - [BeautifulSoup Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
