@@ -30,6 +30,7 @@ src/
 │   ├── main_integrations.py
 │   ├── youtube.py
 │   ├── bandcamp.py
+│   ├── soundcloud.py
 │   └── README.md
 └── README.md                # This file
 ```
@@ -195,18 +196,18 @@ Detects which streaming platform a URL belongs to.
 **Parameters:**
 - `streaming_link` (str): Full streaming URL
 
-**Returns:** Platform name (`'youtube'`, `'bandcamp'`, etc.) or `None` if unsupported
+**Returns:** Platform name (`'youtube'`, `'bandcamp'`, `'soundcloud'`, etc.) or `None` if unsupported
 
 **Supported Platforms:**
 ```python
 PLATFORM_DOMAINS = {
     'youtube': ['youtube.com', 'youtu.be', 'music.youtube.com', 'm.youtube.com'],
     'bandcamp': ['bandcamp.com'],
+    'soundcloud': ['soundcloud.com'],
 }
 ```
 
 Coming soon:
-* Soundcloud
 * Nina
 
 
@@ -219,6 +220,9 @@ platform = check_streaming_link_platform('https://youtube.com/watch?v=123')
 
 platform = check_streaming_link_platform('https://horsevision.bandcamp.com/track/how-are-we')
 # Returns: 'bandcamp'
+
+platform = check_streaming_link_platform('https://soundcloud.com/resident-advisor/ex-795-avalon-emerson')
+# Returns: 'soundcloud'
 
 platform = check_streaming_link_platform('https://unknown-site.com')
 # Returns: None
@@ -239,8 +243,83 @@ See [`integrations/README.md`](./integrations/README.md) for detailed documentat
 
 **Quick Summary:**
 - **YouTube** - Official API integration
-- **Bandcamp** - HTML scraping adopted Selenium to avoid Bandcamp blocking us
+- **Bandcamp** - HTML scraping using Selenium to handle server-rendered pages
+- **SoundCloud** - Official API integration using OAuth 2.0 client credentials
 - **Main Orchestrator** - Routes URLs to correct platform
+
+---
+
+### `integrations/soundcloud.py`
+
+**Purpose:** Fetches mix metadata from SoundCloud using the official SoundCloud API with OAuth 2.0 client credentials authentication.
+
+**Authentication:** OAuth 2.0 client credentials flow. Requires `SOUNDCLOUD_CLIENT_ID` and `SOUNDCLOUD_CLIENT_SECRET` to be set in your `.env` file.
+
+**Note:** Unlike Bandcamp, SoundCloud is a React app and cannot be scraped with BeautifulSoup alone. The official API is used instead, which avoids the need for Selenium entirely for SoundCloud URLs.
+
+**Key Functions:**
+
+#### `get_soundcloud_metadata(soundcloud_url)`
+Fetches raw track metadata from the SoundCloud API.
+
+**Parameters:**
+- `soundcloud_url` (str): Full SoundCloud track or mix URL
+
+**Returns:** `[mix_name, mix_page]` as a list
+
+**Raises:** `SoundcloudMetaDataError` on HTTP errors, missing access token, or unexpected failures
+
+**Order of operations:**
+1. POSTs to `/oauth2/token` to retrieve an access token
+2. GETs `/resolve` with the track URL to fetch the track object
+3. Extracts `title` and `user.username` from the response
+
+**Usage:**
+```python
+from .src.integrations.soundcloud import get_soundcloud_metadata
+
+result = get_soundcloud_metadata('https://soundcloud.com/resident-advisor/ex-795-avalon-emerson')
+# Returns: ['EX.795 Avalon Emerson', 'Resident Advisor']
+```
+
+---
+
+#### `orchestrate_soundcloud_meta_data_dictionary(soundcloud_url)`
+Orchestration module that calls `get_soundcloud_metadata` and packages the result into the standard metadata dictionary format.
+
+**Parameters:**
+- `soundcloud_url` (str): Full SoundCloud track or mix URL
+
+**Returns:** Metadata dictionary
+
+**Return Format:**
+```python
+{
+    'track_type': 'mix',
+    'track_name': 'EX.795 Avalon Emerson',
+    'mix_page': 'Resident Advisor',
+    'streaming_platform': 'soundcloud',
+    'streaming_link': 'https://soundcloud.com/resident-advisor/ex-795-avalon-emerson'
+}
+```
+
+**Raises:** `SoundcloudMetaDataError` on any failure
+
+**Usage:**
+```python
+from .src.integrations.soundcloud import orchestrate_soundcloud_meta_data_dictionary
+
+metadata = orchestrate_soundcloud_meta_data_dictionary(
+    'https://soundcloud.com/resident-advisor/ex-795-avalon-emerson'
+)
+```
+
+**Test URLs:**
+```
+https://soundcloud.com/resident-advisor/ex-795-avalon-emerson
+https://soundcloud.com/v4nj4nz/vanja-secret-world-x-mutations
+https://soundcloud.com/kioskradio/beautiful-freaks-w-remove-me
+```
 
 ---
 
@@ -384,9 +463,21 @@ def get_hostname(streaming_url):
         return None
 ```
 
+### Integrations Layer
+
+Each integration raises its own platform-specific exception, which is caught and logged by the main orchestrator:
+
+```python
+# Platform-specific exceptions
+BandCampMetaDataError
+YouTubeMetaDataError
+SoundcloudMetaDataError
+```
+
 **Philosophy:**
 - **Services**: Raise exceptions (views handle them)
 - **Utils**: Return `None` (caller decides what to do)
+- **Integrations**: Raise platform-specific exceptions (orchestrator handles them)
 
 ---
 
@@ -526,5 +617,16 @@ def get_playlist_tracks(playlist):
 # Use Django Debug Toolbar to see query count
 # Should be ~3 queries, not 100+
 ```
+
+### SoundCloud Authentication Errors
+
+**Problem:** `401 Unauthorized` when calling the SoundCloud API
+
+**Solution:** Verify the following in your `.env` file:
+```
+SOUNDCLOUD_CLIENT_ID=your_client_id_here
+SOUNDCLOUD_CLIENT_SECRET=your_client_secret_here
+```
+Note that a client ID alone is not sufficient — the SoundCloud integration uses the OAuth 2.0 client credentials flow, so both values are required.
 
 ---

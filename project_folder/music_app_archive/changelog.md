@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+# 2026-04-15
+### Added
+* Soundcloud as an accepted platform along with unit tests
+* view_edit_playlist_mixes.html
+* view_edit_playlist_tracks.html
+
+### Changed
+* Moved GetSoup to main_integrations.py as it can be used for other platforms that don't have APIs
+* Display in view_edit_playlist_
 
 # 2026-03-15
 ### Added
