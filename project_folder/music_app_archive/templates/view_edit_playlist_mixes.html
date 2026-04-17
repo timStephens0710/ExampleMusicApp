@@ -34,10 +34,9 @@
                         <thead>
                             <tr>
                                 <th class="checkbox-header d-none"></th>
-                                <th scope="col">#</th>
-                                <th scope="col">Track Title</th>
+                                <th scope="col">Mix Name</th>
                                 <th scope="col">Artist</th>
-                                <th scope="col">Album</th>
+                                <th scope="col">Mix Page</th>
                                 <th scope="col">Link</th>
                                 <th scope="col">Added By</th>
                                 <th scope="col">Date Added</th>
@@ -47,10 +46,9 @@
                             {% for playlist_track in list_of_playlist_tracks %}
                             <tr class="row_table" data-playlist-track-id="{{ playlist_track.id }}">
                                 <td class="playlist-track-checkbox-cell d-none"><input type="checkbox" class="playlist-track-checkbox"></td>
-                                <td class="playlist_position">{{playlist_track.position}}</td>
                                 <td class="playlist_track_name">{{playlist_track.track_name}}</td>
                                 <td class="playlist_track_artist">{{playlist_track.artist}}</td>
-                                <td class="playlist_track_album">{{playlist_track.album_name}}</td>
+                                <td class="playlist_track_mix_page">{{playlist_track.mix_page}}</td>
                                 <td class="playlist_track_streaming_links">
                                     {% if playlist_track.streaming_links %}
                                         {% for link in playlist_track.streaming_links %}
