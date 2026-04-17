@@ -175,3 +175,10 @@ authentication process.*/
 .btn-cancel:hover {
     color: #66F523;
 }
+
+/* Table styling */
+/* Table text styling */
+.table-responsive td,
+.table-responsive th {
+    color: #9eadeb; 
+}
